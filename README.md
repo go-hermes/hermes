@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-hermes/hermes)](https://goreportcard.com/report/github.com/go-hermes/hermes)
 [![Go Coverage](https://codecov.io/github/go-hermes/hermes/coverage.svg)](https://codecov.io/github/go-hermes/hermes/)
 [![Godoc](https://godoc.org/github.com/go-hermes/hermes?status.svg)](https://godoc.org/github.com/go-hermes/hermes)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fgo-hermes%2Fhermes.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fgo-hermes%2Fhermes?ref=badge_shield)
 
 Hermes is the Go port of the great [mailgen](https://github.com/eladnava/mailgen) engine for Node.js. Check their work, it's awesome!
 It's a package that generates clean, responsive HTML e-mails for sending transactional e-mails (welcome e-mails, reset password e-mails, receipt e-mails and so on), and associated plain text fallback.
@@ -420,4 +420,4 @@ Apache 2.0
 
 
 
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes?ref=badge_large)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fgo-hermes%2Fhermes.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fgo-hermes%2Fhermes?ref=badge_large)
