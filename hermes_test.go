@@ -1,8 +1,14 @@
 package hermes
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testedThemes = []Theme{
@@ -32,7 +38,7 @@ type SimpleExample struct {
 	theme Theme
 }
 
-func (ed *SimpleExample) getExample() (Hermes, Email) {
+func (ed SimpleExample) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -92,12 +98,15 @@ func (ed *SimpleExample) getExample() (Hermes, Email) {
 			Outros: []string{
 				"Need help, or have questions? Just reply to this email, we'd love to help.",
 			},
+			TemplateOverrides: map[string]any{
+				"body_width": "1000px",
+			},
 		},
 	}
 	return h, email
 }
 
-func (ed *SimpleExample) assertHTMLContent(t *testing.T, r string) {
+func (ed SimpleExample) assertHTMLContent(t *testing.T, r string) {
 
 	// Assert on product
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
@@ -120,7 +129,132 @@ func (ed *SimpleExample) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
 }
 
-func (ed *SimpleExample) assertPlainTextContent(t *testing.T, r string) {
+func (ed SimpleExample) assertPlainTextContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source", "Table: Should have table content")
+	assert.Contains(t, r, `+--------+--------------------------------+--------+
+|  ITEM  |          DESCRIPTION           | PRICE  |
++--------+--------------------------------+--------+
+| Golang | Open source programming        | $10.99 |
+|        | language that makes it easy    |        |
+|        | to build simple, reliable, and |        |
+|        | efficient software             |        |
+| Hermes | Programmatically create        | $1.99  |
+|        | beautiful e-mails using        |        |
+|        | Golang.                        |        |
++--------+--------------------------------+--------`, "Table: Should have pretty table content")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.NotContains(t, r, "Confirm your account", "Action: Should not have button of action in plain text")
+	assert.NotContains(t, r, "#22BC66", "Action: Button should not have color in plain text")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Even if button is not possible in plain text, it should have the link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
+type SimpleExamplePremailer struct {
+	theme Theme
+}
+
+func (ed SimpleExamplePremailer) getExample() (Hermes, Email) {
+	h := Hermes{
+		Theme: ed.theme,
+		Product: Product{
+			Name:      "HermesName",
+			Link:      "http://hermes-link.com",
+			Copyright: "Copyright © Hermes-Test",
+			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+		},
+		TextDirection: TDLeftToRight,
+	}
+
+	email := Email{
+		Body{
+			Name: "Jon Snow",
+			Intros: []string{
+				"Welcome to Hermes! We're very excited to have you on board.",
+			},
+			Dictionary: []Entry{
+				{"Firstname", "Jon"},
+				{"Lastname", "Snow"},
+				{"Birthday", "01/01/283"},
+			},
+			Table: Table{
+				Data: [][]Entry{
+					{
+						{Key: "Item", Value: "Golang"},
+						{Key: "Description", Value: "Open source programming language that makes it easy to build simple, reliable, and efficient software"},
+						{Key: "Price", Value: "$10.99"},
+					},
+					{
+						{Key: "Item", Value: "Hermes"},
+						{Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
+						{Key: "Price", Value: "$1.99"},
+					},
+				},
+				Columns: Columns{
+					CustomWidth: map[string]string{
+						"Item":  "20%",
+						"Price": "15%",
+					},
+					CustomAlignment: map[string]string{
+						"Price": "right",
+					},
+				},
+			},
+			Actions: []Action{
+				{
+					Instructions: "To get started with Hermes, please click here:",
+					Button: Button{
+						Color: "#22BC66",
+						Text:  "Confirm your account",
+						Link:  "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010",
+					},
+				},
+			},
+			Outros: []string{
+				"Need help, or have questions? Just reply to this email, we'd love to help.",
+			},
+			TemplateOverrides: map[string]any{
+				"body_width": "1000px",
+			},
+		},
+	}
+	return h, email
+}
+
+func (ed SimpleExamplePremailer) assertHTMLContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source programming language", "Table: Should have table with first row and first column")
+	assert.Contains(t, r, "Programmatically create beautiful e-mails using Golang", "Table: Should have table with second row and first column")
+	assert.Contains(t, r, "$10.99", "Table: Should have table with first row and second column")
+	assert.Contains(t, r, "$1.99", "Table: Should have table with second row and second column")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.Contains(t, r, "Confirm your account", "Action: Should have button of action")
+	assert.Contains(t, r, "#22BC66", "Action: Button should have given color")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Button should have link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
+func (ed SimpleExamplePremailer) assertPlainTextContent(t *testing.T, r string) {
 
 	// Assert on product
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
@@ -155,7 +289,7 @@ type WithTitleInsteadOfNameExample struct {
 	theme Theme
 }
 
-func (ed *WithTitleInsteadOfNameExample) getExample() (Hermes, Email) {
+func (ed WithTitleInsteadOfNameExample) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -174,12 +308,12 @@ func (ed *WithTitleInsteadOfNameExample) getExample() (Hermes, Email) {
 	return h, email
 }
 
-func (ed *WithTitleInsteadOfNameExample) assertHTMLContent(t *testing.T, r string) {
+func (ed WithTitleInsteadOfNameExample) assertHTMLContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Hi Jon Snow", "Name: should not find greetings from Jon Snow because title should be used")
 	assert.Contains(t, r, "A new e-mail", "Title should be used instead of name")
 }
 
-func (ed *WithTitleInsteadOfNameExample) assertPlainTextContent(t *testing.T, r string) {
+func (ed WithTitleInsteadOfNameExample) assertPlainTextContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Hi Jon Snow", "Name: should not find greetings from Jon Snow because title should be used")
 	assert.Contains(t, r, "A new e-mail", "Title shoud be used instead of name")
 }
@@ -188,7 +322,7 @@ type WithGreetingDifferentThanDefault struct {
 	theme Theme
 }
 
-func (ed *WithGreetingDifferentThanDefault) getExample() (Hermes, Email) {
+func (ed WithGreetingDifferentThanDefault) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -207,12 +341,12 @@ func (ed *WithGreetingDifferentThanDefault) getExample() (Hermes, Email) {
 	return h, email
 }
 
-func (ed *WithGreetingDifferentThanDefault) assertHTMLContent(t *testing.T, r string) {
+func (ed WithGreetingDifferentThanDefault) assertHTMLContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Hi Jon Snow", "Should not find greetings with 'Hi' which is default")
 	assert.Contains(t, r, "Dear Jon Snow", "Should have greeting with Dear")
 }
 
-func (ed *WithGreetingDifferentThanDefault) assertPlainTextContent(t *testing.T, r string) {
+func (ed WithGreetingDifferentThanDefault) assertPlainTextContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Hi Jon Snow", "Should not find greetings with 'Hi' which is default")
 	assert.Contains(t, r, "Dear Jon Snow", "Should have greeting with Dear")
 }
@@ -221,7 +355,7 @@ type WithSignatureDifferentThanDefault struct {
 	theme Theme
 }
 
-func (ed *WithSignatureDifferentThanDefault) getExample() (Hermes, Email) {
+func (ed WithSignatureDifferentThanDefault) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -240,12 +374,12 @@ func (ed *WithSignatureDifferentThanDefault) getExample() (Hermes, Email) {
 	return h, email
 }
 
-func (ed *WithSignatureDifferentThanDefault) assertHTMLContent(t *testing.T, r string) {
+func (ed WithSignatureDifferentThanDefault) assertHTMLContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Yours truly", "Should not find signature with 'Yours truly' which is default")
 	assert.Contains(t, r, "Best regards", "Should have greeting with Dear")
 }
 
-func (ed *WithSignatureDifferentThanDefault) assertPlainTextContent(t *testing.T, r string) {
+func (ed WithSignatureDifferentThanDefault) assertPlainTextContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "Yours truly", "Should not find signature with 'Yours truly' which is default")
 	assert.Contains(t, r, "Best regards", "Should have greeting with Dear")
 }
@@ -254,7 +388,7 @@ type WithInviteCode struct {
 	theme Theme
 }
 
-func (ed *WithInviteCode) getExample() (Hermes, Email) {
+func (ed WithInviteCode) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -266,11 +400,11 @@ func (ed *WithInviteCode) getExample() (Hermes, Email) {
 
 	email := Email{
 		Body{
-			Name:      "Jon Snow",
+			Name: "Jon Snow",
 			Actions: []Action{
 				{
 					Instructions: "Here is your invite code:",
-					InviteCode: "123456",
+					InviteCode:   "123456",
 				},
 			},
 		},
@@ -278,12 +412,12 @@ func (ed *WithInviteCode) getExample() (Hermes, Email) {
 	return h, email
 }
 
-func (ed *WithInviteCode) assertHTMLContent(t *testing.T, r string) {
+func (ed WithInviteCode) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Here is your invite code", "Should contains the instruction")
 	assert.Contains(t, r, "123456", "Should contain the short code")
 }
 
-func (ed *WithInviteCode) assertPlainTextContent(t *testing.T, r string) {
+func (ed WithInviteCode) assertPlainTextContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Here is your invite code", "Should contains the instruction")
 	assert.Contains(t, r, "123456", "Should contain the short code")
 }
@@ -292,7 +426,7 @@ type WithFreeMarkdownContent struct {
 	theme Theme
 }
 
-func (ed *WithFreeMarkdownContent) getExample() (Hermes, Email) {
+func (ed WithFreeMarkdownContent) getExample() (Hermes, Email) {
 	h := Hermes{
 		Theme: ed.theme,
 		Product: Product{
@@ -355,7 +489,7 @@ Feel free to contact us for any question regarding this matter at [support@herme
 	return h, email
 }
 
-func (ed *WithFreeMarkdownContent) assertHTMLContent(t *testing.T, r string) {
+func (ed WithFreeMarkdownContent) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Yours truly", "Should find signature with 'Yours truly' which is default")
 	assert.Contains(t, r, "Jon Snow", "Should find title with 'Jon Snow'")
 	assert.Contains(t, r, "<em>Hermes</em> service will shutdown", "Should find quote as HTML formatted content")
@@ -366,7 +500,7 @@ func (ed *WithFreeMarkdownContent) assertHTMLContent(t *testing.T, r string) {
 	assert.NotContains(t, r, "should not be displayed", "Should find any other content that the one from FreeMarkdown object")
 }
 
-func (ed *WithFreeMarkdownContent) assertPlainTextContent(t *testing.T, r string) {
+func (ed WithFreeMarkdownContent) assertPlainTextContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Yours truly", "Should find signature with 'Yours truly' which is default")
 	assert.Contains(t, r, "Jon Snow", "Should find title with 'Jon Snow'")
 	assert.Contains(t, r, "> Hermes service will shutdown", "Should find quote as plain text with quote emphaze on sentence")
@@ -389,38 +523,58 @@ func (ed *WithFreeMarkdownContent) assertPlainTextContent(t *testing.T, r string
 // Test all the themes for the features
 
 func TestThemeSimple(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &SimpleExample{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &SimpleExample{theme})
+		})
+	}
+}
+
+func TestThemeSimplePremailer(t *testing.T) {
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &SimpleExamplePremailer{theme})
+		})
 	}
 }
 
 func TestThemeWithTitleInsteadOfName(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &WithTitleInsteadOfNameExample{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &WithTitleInsteadOfNameExample{theme})
+		})
 	}
 }
 
 func TestThemeWithGreetingDifferentThanDefault(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &WithGreetingDifferentThanDefault{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &WithGreetingDifferentThanDefault{theme})
+		})
 	}
 }
 
 func TestThemeWithGreetingDiffrentThanDefault(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &WithSignatureDifferentThanDefault{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &WithSignatureDifferentThanDefault{theme})
+		})
 	}
 }
 
 func TestThemeWithFreeMarkdownContent(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &WithFreeMarkdownContent{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &WithFreeMarkdownContent{theme})
+		})
 	}
 }
 
 func TestThemeWithInviteCode(t *testing.T) {
-	for _, theme := range testedThemes {
-		checkExample(t, &WithInviteCode{theme})
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &WithInviteCode{theme})
+		})
 	}
 }
 
@@ -431,20 +585,36 @@ func checkExample(t *testing.T, ex Example) {
 	// When generating HTML template
 	r, err := h.GenerateHTML(email)
 	t.Log(r)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, r)
 
-	// Then asserting HTML is OK
-	ex.assertHTMLContent(t, r)
+	if assert.Nil(t, err) && assert.NotEmpty(t, r) {
+		previewEmail(fmt.Sprintf("%s.html", t.Name()), r)
+		// Then asserting HTML is OK
+		ex.assertHTMLContent(t, r)
+	}
 
 	// When generating plain text template
 	r, err = h.GeneratePlainText(email)
 	t.Log(r)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, r)
 
-	// Then asserting plain text is OK
-	ex.assertPlainTextContent(t, r)
+	if assert.Nil(t, err) && assert.NotEmpty(t, r) {
+		previewEmail(fmt.Sprintf("%s.txt", t.Name()), r)
+		// Then asserting plain text is OK
+		ex.assertPlainTextContent(t, r)
+	}
+}
+
+// previews Email if debug mode enabled
+func previewEmail(name, input string) {
+	debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
+
+	if !debug {
+		return
+	}
+
+	filename := fmt.Sprintf("/tmp/%s", strings.ReplaceAll(name, "/", "-"))
+	os.WriteFile(filename, []byte(input), 0644)
+	cmd := exec.Command("open", filename)
+	cmd.Run()
 }
 
 ////////////////////////////////////////////

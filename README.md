@@ -1,9 +1,9 @@
 # Hermes
 
-[![Build Status](https://travis-ci.org/matcornic/hermes.svg?branch=master)](https://travis-ci.org/matcornic/hermes)
-[![Go Report Card](https://goreportcard.com/badge/github.com/matcornic/hermes)](https://goreportcard.com/report/github.com/matcornic/hermes)
-[![Go Coverage](https://codecov.io/github/matcornic/hermes/coverage.svg)](https://codecov.io/github/matcornic/hermes/)
-[![Godoc](https://godoc.org/github.com/matcornic/hermes?status.svg)](https://godoc.org/github.com/matcornic/hermes)
+[![PR Checks Status](https://github.com/go-hermes/hermes/actions/workflows/pr_checks.yml/badge.svg)](https://github.com/go-hermes/hermes/actions/workflows/pr_checks.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-hermes/hermes)](https://goreportcard.com/report/github.com/go-hermes/hermes)
+[![Go Coverage](https://codecov.io/github/go-hermes/hermes/coverage.svg)](https://codecov.io/github/go-hermes/hermes/)
+[![Godoc](https://godoc.org/github.com/go-hermes/hermes?status.svg)](https://godoc.org/github.com/go-hermes/hermes)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmatcornic%2Fhermes?ref=badge_shield)
 
 Hermes is the Go port of the great [mailgen](https://github.com/eladnava/mailgen) engine for Node.js. Check their work, it's awesome!
@@ -18,10 +18,10 @@ It's a package that generates clean, responsive HTML e-mails for sending transac
 First install the package:
 
 ```
-go get -u github.com/matcornic/hermes/v2
+go get -u github.com/go-hermes/hermes/v2
 ```
 
-> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.11 with gomodules enabled.
+> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.22 with gomodules enabled.
 > You can still use an Hermes release compatible with prior Go versions by using *v1.2.0* release
 
 Then, start using the package by importing and configuring it:
@@ -277,38 +277,42 @@ email := hermes.Email{
 To inject multiple action buttons in to the e-mail, supply another struct in Actions slice `Action`.
 
 ### Table
+> **Note** The `Table` field has been deprecated. We currently are supporting backwards compatability so as not to break existing users.
+> A warning will be logged out when this field is in use.
 
-To inject a table into the e-mail, supply the `Table` object as follows:
+To inject a table into the e-mail, supply the `Tables` object as follows:
 
 ```go
 email := hermes.Email{
     Body: hermes.Body{
-        Table: hermes.Table{
-            Data: [][]hermes.Entry{
-                // List of rows
-                {   
-                    // Key is the column name, Value is the cell value
-                    // First object defines what columns will be displayed
-                    {Key: "Item", Value: "Golang"},
-                    {Key: "Description", Value: "Open source programming language that makes it easy to build simple, reliable, and efficient software"},
-                    {Key: "Price", Value: "$10.99"},
+        Tables: []hermes.Table{
+            {
+                Data: [][]hermes.Entry{
+                    // List of rows
+                    {   
+                        // Key is the column name, Value is the cell value
+                        // First object defines what columns will be displayed
+                        {Key: "Item", Value: "Golang"},
+                        {Key: "Description", Value: "Open source programming language that makes it easy to build simple, reliable, and efficient software"},
+                        {Key: "Price", Value: "$10.99"},
+                    },
+                    {
+                        {Key: "Item", Value: "Hermes"},
+                        {Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
+                        {Key: "Price", Value: "$1.99"},
+                    },
                 },
-                {
-                    {Key: "Item", Value: "Hermes"},
-                    {Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
-                    {Key: "Price", Value: "$1.99"},
+                Columns: hermes.Columns{
+                    // Custom style for each rows
+                    CustomWidth: map[string]string{
+                        "Item":  "20%",
+                        "Price": "15%",
+                    },
+                    CustomAlignment: map[string]string{
+                        "Price": "right",
+                    },
                 },
-            },
-            Columns: hermes.Columns{
-                // Custom style for each rows
-                CustomWidth: map[string]string{
-                    "Item":  "20%",
-                    "Price": "15%",
-                },
-                CustomAlignment: map[string]string{
-                    "Price": "right",
-                },
-            },
+            }
         },
     },
 }

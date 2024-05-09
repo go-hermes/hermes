@@ -8,6 +8,7 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/jaytaylor/html2text"
 	"github.com/russross/blackfriday/v2"
+	"github.com/sirupsen/logrus"
 	"github.com/vanng822/go-premailer/premailer"
 )
 
@@ -62,16 +63,18 @@ type Markdown template.HTML
 
 // Body is the body of the email, containing all interesting data
 type Body struct {
-	Name         string   // The name of the contacted person
-	Intros       []string // Intro sentences, first displayed in the email
-	Dictionary   []Entry  // A list of key+value (useful for displaying parameters/settings/personal info)
-	Table        Table    // Table is an table where you can put data (pricing grid, a bill, and so on)
-	Actions      []Action // Actions are a list of actions that the user will be able to execute via a button click
-	Outros       []string // Outro sentences, last displayed in the email
-	Greeting     string   // Greeting for the contacted person (default to 'Hi')
-	Signature    string   // Signature for the contacted person (default to 'Yours truly')
-	Title        string   // Title replaces the greeting+name when set
-	FreeMarkdown Markdown // Free markdown content that replaces all content other than header and footer
+	Name              string         // The name of the contacted person
+	Intros            []string       // Intro sentences, first displayed in the email
+	Dictionary        []Entry        // A list of key+value (useful for displaying parameters/settings/personal info)
+	Table             Table          // (DEPRECATED: Use Tables field instead) Table is an table where you can put data (pricing grid, a bill, and so on)
+	Tables            []Table        // Tables is a list of tables where you can put data (pricing grid, a bill, and so on)
+	Actions           []Action       // Actions are a list of actions that the user will be able to execute via a button click
+	Outros            []string       // Outro sentences, last displayed in the email
+	Greeting          string         // Greeting for the contacted person (default to 'Hi')
+	Signature         string         // Signature for the contacted person (default to 'Yours truly')
+	Title             string         // Title replaces the greeting+name when set
+	FreeMarkdown      Markdown       // Free markdown content that replaces all content other than header and footer
+	TemplateOverrides map[string]any // TemplateOverrides is a map of key-value pairs that can be used to override the default template values
 }
 
 // ToHTML converts Markdown to HTML
@@ -89,6 +92,7 @@ type Entry struct {
 
 // Table is an table where you can put data (pricing grid, a bill, and so on)
 type Table struct {
+	Title   string    // Title of the table
 	Data    [][]Entry // Contains data
 	Columns Columns   // Contains meta-data for display purpose (width, alignement)
 }
@@ -190,6 +194,11 @@ func (h *Hermes) generateTemplate(email Email, tplt string) (string, error) {
 	err := setDefaultEmailValues(&email)
 	if err != nil {
 		return "", err
+	}
+
+	if len(email.Body.Table.Data) > 0 {
+		logrus.Warn("Email.Body.Table field is deprecated, please use Email.Body.Tables instead")
+		email.Body.Tables = append(email.Body.Tables, email.Body.Table)
 	}
 
 	// Generate the email from Golang template

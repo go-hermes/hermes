@@ -27,3 +27,4 @@ _testmain.go
 coverage.txt
 vendor/
 .idea/
+cp.out
