@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/matcornic/hermes/v2"
+	"github.com/go-hermes/hermes/v2"
 )
 
 type reset struct {
