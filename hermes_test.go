@@ -2,6 +2,7 @@ package hermes
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/exec"
@@ -291,6 +292,255 @@ func (ed SimpleExamplePremailer) assertPlainTextContent(t *testing.T, r string) 
 	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
 }
 
+type SimpleExampleUnsafe struct {
+	theme Theme
+}
+
+func (ed SimpleExampleUnsafe) getExample() (Hermes, Email) {
+	h := Hermes{
+		Theme: ed.theme,
+		Product: Product{
+			Name:      "HermesName",
+			Link:      "http://hermes-link.com",
+			Copyright: "Copyright © Hermes-Test",
+			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+		},
+		TextDirection: TDLeftToRight,
+	}
+
+	email := Email{
+		Body{
+			Name: "Jon Snow",
+			IntrosUnsafe: []template.HTML{
+				"<b>Welcome to Hermes!</b> We're very excited to have you on board.",
+			},
+			Dictionary: []Entry{
+				{"Firstname", "Jon"},
+				{"Lastname", "Snow"},
+				{"Birthday", "01/01/283"},
+			},
+			Table: Table{
+				Data: [][]Entry{
+					{
+						{Key: "Item", Value: "Golang"},
+						{Key: "Description", Value: "Open source programming language that makes it easy to build simple, reliable, and efficient software"},
+						{Key: "Price", Value: "$10.99"},
+					},
+					{
+						{Key: "Item", Value: "Hermes"},
+						{Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
+						{Key: "Price", Value: "$1.99"},
+					},
+				},
+				Columns: Columns{
+					CustomWidth: map[string]string{
+						"Item":  "20%",
+						"Price": "15%",
+					},
+					CustomAlignment: map[string]string{
+						"Price": "right",
+					},
+				},
+			},
+			Actions: []Action{
+				{
+					Instructions: "To get started with Hermes, please click here:",
+					Button: Button{
+						Color: "#22BC66",
+						Text:  "Confirm your account",
+						Link:  "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010",
+					},
+				},
+			},
+			OutrosUnsafe: []template.HTML{
+				"Need help, or have questions? Just reply to <u>this email</u>, we'd love to help.",
+			},
+			TemplateOverrides: map[string]any{
+				"body_width": "1000px",
+			},
+		},
+	}
+	return h, email
+}
+
+func (ed SimpleExampleUnsafe) assertHTMLContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source programming language", "Table: Should have table with first row and first column")
+	assert.Contains(t, r, "Programmatically create beautiful e-mails using Golang", "Table: Should have table with second row and first column")
+	assert.Contains(t, r, "$10.99", "Table: Should have table with first row and second column")
+	assert.Contains(t, r, "$1.99", "Table: Should have table with second row and second column")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.Contains(t, r, "Confirm your account", "Action: Should have button of action")
+	assert.Contains(t, r, "#22BC66", "Action: Button should have given color")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Button should have link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
+func (ed SimpleExampleUnsafe) assertPlainTextContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source", "Table: Should have table content")
+	assert.Contains(t, r, `+--------+--------------------------------+--------+
+|  ITEM  |          DESCRIPTION           | PRICE  |
++--------+--------------------------------+--------+
+| Golang | Open source programming        | $10.99 |
+|        | language that makes it easy    |        |
+|        | to build simple, reliable, and |        |
+|        | efficient software             |        |
+| Hermes | Programmatically create        | $1.99  |
+|        | beautiful e-mails using        |        |
+|        | Golang.                        |        |
++--------+--------------------------------+--------`, "Table: Should have pretty table content")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.NotContains(t, r, "Confirm your account", "Action: Should not have button of action in plain text")
+	assert.NotContains(t, r, "#22BC66", "Action: Button should not have color in plain text")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Even if button is not possible in plain text, it should have the link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
+type SimpleExampleMarkdownIntroOutro struct {
+	theme Theme
+}
+
+func (ed SimpleExampleMarkdownIntroOutro) getExample() (Hermes, Email) {
+	h := Hermes{
+		Theme: ed.theme,
+		Product: Product{
+			Name:      "HermesName",
+			Link:      "http://hermes-link.com",
+			Copyright: "Copyright © Hermes-Test",
+			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+		},
+		TextDirection:      TDLeftToRight,
+		DisableCSSInlining: true,
+	}
+
+	email := Email{
+		Body{
+			Name: "Jon Snow",
+			IntrosMarkdown: `## Welcome to Hermes! 
+				### We're very excited to have you on board.
+				`,
+			Dictionary: []Entry{
+				{"Firstname", "Jon"},
+				{"Lastname", "Snow"},
+				{"Birthday", "01/01/283"},
+			},
+			Table: Table{
+				Data: [][]Entry{
+					{
+						{Key: "Item", Value: "Golang"},
+						{Key: "Description", Value: "Open source programming language that makes it easy to build simple, reliable, and efficient software"},
+						{Key: "Price", Value: "$10.99"},
+					},
+					{
+						{Key: "Item", Value: "Hermes"},
+						{Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
+						{Key: "Price", Value: "$1.99"},
+					},
+				},
+				Columns: Columns{
+					CustomWidth: map[string]string{
+						"Item":  "20%",
+						"Price": "15%",
+					},
+					CustomAlignment: map[string]string{
+						"Price": "right",
+					},
+				},
+			},
+			Actions: []Action{
+				{
+					Instructions: "To get started with Hermes, please click here:",
+					Button: Button{
+						Color: "#22BC66",
+						Text:  "Confirm your account",
+						Link:  "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010",
+					},
+				},
+			},
+			OutrosMarkdown: "**Need help, or have questions?** Just reply to **this email**, we'd love to _help._",
+			TemplateOverrides: map[string]any{
+				"body_width": "1000px",
+			},
+		},
+	}
+	return h, email
+}
+
+func (ed SimpleExampleMarkdownIntroOutro) assertHTMLContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source programming language", "Table: Should have table with first row and first column")
+	assert.Contains(t, r, "Programmatically create beautiful e-mails using Golang", "Table: Should have table with second row and first column")
+	assert.Contains(t, r, "$10.99", "Table: Should have table with first row and second column")
+	assert.Contains(t, r, "$1.99", "Table: Should have table with second row and second column")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.Contains(t, r, "Confirm your account", "Action: Should have button of action")
+	assert.Contains(t, r, "#22BC66", "Action: Button should have given color")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Button should have link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
+func (ed SimpleExampleMarkdownIntroOutro) assertPlainTextContent(t *testing.T, r string) {
+
+	// Assert on product
+	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
+	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
+	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
+	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+
+	// Assert on email body
+	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
+	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
+	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
+	assert.Contains(t, r, "Open source", "Table: Should have table content")
+	assert.Contains(t, r, `+--------+--------------------------------+--------+
+|  ITEM  |          DESCRIPTION           | PRICE  |
++--------+--------------------------------+--------+
+| Golang | Open source programming        | $10.99 |
+|        | language that makes it easy    |        |
+|        | to build simple, reliable, and |        |
+|        | efficient software             |        |
+| Hermes | Programmatically create        | $1.99  |
+|        | beautiful e-mails using        |        |
+|        | Golang.                        |        |
++--------+--------------------------------+--------`, "Table: Should have pretty table content")
+	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
+	assert.NotContains(t, r, "Confirm your account", "Action: Should not have button of action in plain text")
+	assert.NotContains(t, r, "#22BC66", "Action: Button should not have color in plain text")
+	assert.Contains(t, r, "https://hermes-example.com/confirm?token=d9729feb74992cc3482b350163a1a010", "Action: Even if button is not possible in plain text, it should have the link")
+	assert.Contains(t, r, "Need help, or have questions", "Outro: Should have outro")
+}
+
 type WithTitleInsteadOfNameExample struct {
 	theme Theme
 }
@@ -540,6 +790,22 @@ func TestThemeSimplePremailer(t *testing.T) {
 	for i, theme := range testedThemes {
 		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
 			checkExample(t, &SimpleExamplePremailer{theme})
+		})
+	}
+}
+
+func TestThemeSimpleMarkdownIntroOutro(t *testing.T) {
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &SimpleExampleMarkdownIntroOutro{theme})
+		})
+	}
+}
+
+func TestThemeSimpleUnsafe(t *testing.T) {
+	for i, theme := range testedThemes {
+		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
+			checkExample(t, &SimpleExampleUnsafe{theme})
 		})
 	}
 }
