@@ -2,12 +2,14 @@ package hermes
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,6 +17,10 @@ var testedThemes = []Theme{
 	// Insert your new theme here
 	new(Default),
 	new(Flat),
+}
+
+func init() {
+	logrus.SetOutput(io.Discard)
 }
 
 /////////////////////////////////////////////////////

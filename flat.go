@@ -12,22 +12,10 @@ func (dt Flat) Name() string {
 
 // HTMLTemplate returns a Golang template that will generate an HTML email.
 func (dt Flat) HTMLTemplate() string {
-	htmlBytes, err := staticFS.ReadFile(fmt.Sprintf(htmlEmail, dt.Name()))
-
-	if err != nil {
-		return ""
-	}
-
-	return string(htmlBytes)
+	return getTemplate(fmt.Sprintf(htmlEmail, dt.Name()))
 }
 
 // PlainTextTemplate returns a Golang template that will generate an plain text email.
 func (dt Flat) PlainTextTemplate() string {
-	plainTextBytes, err := staticFS.ReadFile(fmt.Sprintf(plainTextEmail, dt.Name()))
-
-	if err != nil {
-		return ""
-	}
-
-	return string(plainTextBytes)
+	return getTemplate(fmt.Sprintf(plainTextEmail, dt.Name()))
 }
