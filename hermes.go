@@ -90,8 +90,9 @@ func (c Markdown) ToHTML() template.HTML {
 // Allows using a slice of entries instead of a map
 // Because Golang maps are not ordered
 type Entry struct {
-	Key   string
-	Value string
+	Key         string
+	Value       string
+	UnsafeValue template.HTML
 }
 
 // Table is an table where you can put data (pricing grid, a bill, and so on)

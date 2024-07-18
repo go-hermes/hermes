@@ -26,7 +26,15 @@
   {{ with .Email.Body.Dictionary }}
     <ul>
     {{ range $entry := . }}
-      <li>{{ $entry.Key }}: {{ $entry.Value }}</li>
+      <li>
+        {{ $entry.Key }}: {{ if gt (len $entry.Value) 0 }}
+                            {{ $entry.Value }}
+                          {{ else if gt (len $entry.UnsafeValue) 0 }}
+                              {{ $entry.UnsafeValue }}
+                          {{ else }}
+                              No Value Set
+                          {{ end }}
+      </li>
     {{ end }}
     </ul>
   {{ end }}
@@ -53,7 +61,13 @@
               <tr>
                 {{ range $cell := $row }}
                   <td>
-                    {{ $cell.Value }}
+                    {{ if gt (len $cell.Value) 0 }}
+                        {{ $cell.Value }}
+                    {{ else if gt (len $cell.UnsafeValue) 0 }}
+                        {{ $cell.UnsafeValue }}
+                    {{ else }}
+                        No Value Set
+                    {{ end }}
                   </td>
                 {{ end }}
               </tr>

@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var debug bool
+
 var testedThemes = []Theme{
 	// Insert your new theme here
 	new(Default),
@@ -22,6 +24,7 @@ var testedThemes = []Theme{
 
 func init() {
 	logrus.SetOutput(io.Discard)
+	debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 }
 
 /////////////////////////////////////////////////////
@@ -65,9 +68,9 @@ func (ed SimpleExample) getExample() (Hermes, Email) {
 				"Welcome to Hermes! We're very excited to have you on board.",
 			},
 			Dictionary: []Entry{
-				{"Firstname", "Jon"},
-				{"Lastname", "Snow"},
-				{"Birthday", "01/01/283"},
+				{"Firstname", "Jon", ""},
+				{"Lastname", "Snow", ""},
+				{"Birthday", "01/01/283", ""},
 			},
 			Table: Table{
 				Data: [][]Entry{
@@ -190,9 +193,9 @@ func (ed SimpleExamplePremailer) getExample() (Hermes, Email) {
 				"Welcome to Hermes! We're very excited to have you on board.",
 			},
 			Dictionary: []Entry{
-				{"Firstname", "Jon"},
-				{"Lastname", "Snow"},
-				{"Birthday", "01/01/283"},
+				{"Firstname", "Jon", ""},
+				{"Lastname", "Snow", ""},
+				{"Birthday", "01/01/283", ""},
 			},
 			Table: Table{
 				Data: [][]Entry{
@@ -315,9 +318,9 @@ func (ed SimpleExampleUnsafe) getExample() (Hermes, Email) {
 				"<b>Welcome to Hermes!</b> We're very excited to have you on board.",
 			},
 			Dictionary: []Entry{
-				{"Firstname", "Jon"},
-				{"Lastname", "Snow"},
-				{"Birthday", "01/01/283"},
+				{"Firstname", "Jon", ""},
+				{"Lastname", "Snow", ""},
+				{"Birthday", "01/01/283", ""},
 			},
 			Table: Table{
 				Data: [][]Entry{
@@ -328,7 +331,7 @@ func (ed SimpleExampleUnsafe) getExample() (Hermes, Email) {
 					},
 					{
 						{Key: "Item", Value: "Hermes"},
-						{Key: "Description", Value: "Programmatically create beautiful e-mails using Golang."},
+						{Key: "Description", UnsafeValue: "Programmatically create beautiful e-mails using <a href=\"https://go.dev\">Golang.</a>"},
 						{Key: "Price", Value: "$1.99"},
 					},
 				},
@@ -376,7 +379,7 @@ func (ed SimpleExampleUnsafe) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "Welcome to Hermes", "Intro: Should have intro")
 	assert.Contains(t, r, "Birthday", "Dictionary: Should have dictionary")
 	assert.Contains(t, r, "Open source programming language", "Table: Should have table with first row and first column")
-	assert.Contains(t, r, "Programmatically create beautiful e-mails using Golang", "Table: Should have table with second row and first column")
+	assert.Contains(t, r, "Programmatically create beautiful e-mails using <a href=\"https://go.dev\"", "Table: Should have table with second row and first column")
 	assert.Contains(t, r, "$10.99", "Table: Should have table with first row and second column")
 	assert.Contains(t, r, "$1.99", "Table: Should have table with second row and second column")
 	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
@@ -408,7 +411,7 @@ func (ed SimpleExampleUnsafe) assertPlainTextContent(t *testing.T, r string) {
 |        | efficient software             |        |
 | Hermes | Programmatically create        | $1.99  |
 |        | beautiful e-mails using        |        |
-|        | Golang.                        |        |
+|        | Golang. ( https://go.dev )     |        |
 +--------+--------------------------------+--------`, "Table: Should have pretty table content")
 	assert.Contains(t, r, "started with Hermes", "Action: Should have instruction")
 	assert.NotContains(t, r, "Confirm your account", "Action: Should not have button of action in plain text")
@@ -441,9 +444,9 @@ func (ed SimpleExampleMarkdownIntroOutro) getExample() (Hermes, Email) {
 				### We're very excited to have you on board.
 				`,
 			Dictionary: []Entry{
-				{"Firstname", "Jon"},
-				{"Lastname", "Snow"},
-				{"Birthday", "01/01/283"},
+				{"Firstname", "Jon", ""},
+				{"Lastname", "Snow", ""},
+				{"Birthday", "01/01/283", ""},
 			},
 			Table: Table{
 				Data: [][]Entry{
@@ -715,7 +718,7 @@ Feel free to contact us for any question regarding this matter at [support@herme
 				"An intro that should be kept even with FreeMarkdown",
 			},
 			Dictionary: []Entry{
-				{"Dictionary that should not be displayed", "Because of FreeMarkdown"},
+				{"Dictionary that should not be displayed", "Because of FreeMarkdown", ""},
 			},
 			Table: Table{
 				Data: [][]Entry{
@@ -856,7 +859,9 @@ func checkExample(t *testing.T, ex Example) {
 
 	// When generating HTML template
 	r, err := h.GenerateHTML(email)
-	t.Log(r)
+	if debug {
+		t.Log(r)
+	}
 
 	if assert.Nil(t, err) && assert.NotEmpty(t, r) {
 		previewEmail(fmt.Sprintf("%s.html", t.Name()), r)
@@ -866,7 +871,9 @@ func checkExample(t *testing.T, ex Example) {
 
 	// When generating plain text template
 	r, err = h.GeneratePlainText(email)
-	t.Log(r)
+	if debug {
+		t.Log(r)
+	}
 
 	if assert.Nil(t, err) && assert.NotEmpty(t, r) {
 		previewEmail(fmt.Sprintf("%s.txt", t.Name()), r)
@@ -877,8 +884,6 @@ func checkExample(t *testing.T, ex Example) {
 
 // previews Email if debug mode enabled
 func previewEmail(name, input string) {
-	debug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
-
 	if !debug {
 		return
 	}

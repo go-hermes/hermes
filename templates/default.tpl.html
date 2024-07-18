@@ -373,7 +373,15 @@
                                                             {{ range $entry := . }}
                                                                 <div>
                                                                     <dt>{{ $entry.Key }}:</dt>
-                                                                    <dd>{{ $entry.Value }}</dd>
+                                                                    <dd>
+                                                                        {{ if gt (len $entry.Value) 0 }}
+                                                                            {{ $entry.Value }}
+                                                                        {{ else if gt (len $entry.UnsafeValue) 0 }}
+                                                                            {{ $entry.UnsafeValue }}
+                                                                        {{ else }}
+                                                                            No Value Set
+                                                                        {{ end }}
+                                                                    </dd>
                                                                 </div>
                                                             {{ end }}
                                                         </dl>
@@ -392,7 +400,7 @@
                                                         {{ if gt (len $data) 0 }}
                                                             <table class="data-wrapper" width="100%" cellpadding="0" cellspacing="0">
                                                                 {{ if $table.Title }}
-                                                                <caption style="text-align: left; font-weight: bold;">{{ $table.Title }}</caption>
+                                                                    <caption style="text-align: left; font-weight: bold;">{{ $table.Title }}</caption>
                                                                 {{ end }}
                                                                 <tr>
                                                                     <td colspan="2">
@@ -412,7 +420,13 @@
                                                                                 {{ range $cell := $row }}
                                                                                 <td {{ with $columns }} {{ $align :=index .CustomAlignment $cell.Key }} {{ with $align }}
                                                                                     style="text-align:{{ . }}" {{ end }} {{ end }}>
-                                                                                    {{ $cell.Value }}
+                                                                                    {{ if gt (len $cell.Value) 0 }}
+                                                                                        {{ $cell.Value }}
+                                                                                    {{ else if gt (len $cell.UnsafeValue) 0 }}
+                                                                                        {{ $cell.UnsafeValue }}
+                                                                                    {{ else }}
+                                                                                        No Value Set
+                                                                                    {{ end }}
                                                                                 </td>
                                                                                 {{ end }}
                                                                             </tr>
