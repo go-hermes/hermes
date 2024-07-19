@@ -17,9 +17,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - name: Get changed files since last commit
+        id: changed-files
+        uses: tj-actions/changed-files@v41.0.0
+        with:
+          since_last_remote_commit: "false"
+      - name: Check changed files
+        id: check-files
+        run: echo "has_changes=$(echo ${{ contains(steps.changed-files.outputs.all_modified_files, '.go') || contains(steps.changed-files.outputs.all_modified_files, 'go.mod') || contains(steps.changed-files.outputs.all_modified_files, 'go.sum') || contains(steps.changed-files.outputs.all_modified_files, 'Makefile') }})" >> $GITHUB_OUTPUT
       - name: Use Go From go.mod
+        if: steps.check-files.outputs.has_changes == 'true'
         uses: actions/setup-go@v4
         with:
           go-version-file: "./go.mod"
       - name: Run Unit Tests
+        if: steps.check-files.outputs.has_changes == 'true'
         run: make test
