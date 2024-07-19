@@ -110,6 +110,11 @@ func (ed SimpleExample) getExample() (Hermes, Email) {
 			},
 			TemplateOverrides: map[string]any{
 				"body_width": "1000px",
+				"additional_styles": `
+				  *:not(br):not(tr):not(html) {
+				 	font-family: Comic Sans MS !important; 
+				  }
+				`,
 			},
 		},
 	}

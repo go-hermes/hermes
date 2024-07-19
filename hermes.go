@@ -34,6 +34,14 @@ var templateFuncs = template.FuncMap{
 	"url": func(s string) template.URL {
 		return template.URL(s)
 	},
+	"css": func(in any) template.CSS {
+		s, ok := in.(string)
+		if !ok {
+			return ""
+		}
+
+		return template.CSS(s)
+	},
 }
 
 // TDLeftToRight is the text direction from left to right (default)
@@ -78,7 +86,7 @@ type Body struct {
 	Signature         string          // Signature for the contacted person (default to 'Yours truly')
 	Title             string          // Title replaces the greeting+name when set
 	FreeMarkdown      Markdown        // Free markdown content that replaces all content other than header and footer
-	TemplateOverrides map[string]any  // TemplateOverrides is a map of key-value pairs that can be used to override the default template values
+	TemplateOverrides map[string]any  // TemplateOverrides is a map of key-value pairs that can be used to override the default template values or inject additional styles
 }
 
 // ToHTML converts Markdown to HTML

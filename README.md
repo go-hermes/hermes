@@ -404,6 +404,33 @@ This is helpful when your application needs sending e-mails, wrote on-the-fly by
 
 > Markdown is rendered with [Blackfriday](https://github.com/russross/blackfriday), so every thing Blackfriday can do, Hermes can do it as well.
 
+### Template Overrides
+
+This feature is a bit freeform, yet opinionated. Currently, we support overriding the email body width and injecting additional styles.
+
+#### Usage
+
+Add the `TemplateOverrides` field, type `map[string]any` to the `hermes.Body` struct definition.
+
+**Example**
+```go
+hermes.Email{
+    Body: hermes.Body{
+        // Assuming other definitions (e.g. Intros/Outros/Tables); omitted to showcase TemplateOverrides
+        TemplateOverrides: map[string]any{
+            "body_width": "1000px",
+			"additional_styles": `
+			    *:not(br):not(tr):not(html) {
+				    font-family: Comic Sans MS !important; 
+				}
+			`,
+        }
+    },
+}
+```
+
+With this definition, the entire email is now overridden with a width of 1000px, and the default font-family is now Comic Sans MS. This gives flexibility and customization to the user to provide their own stylings.
+
 ## Troubleshooting
 
 1. After sending multiple e-mails to the same Gmail / Inbox address, they become grouped and truncated since they contain similar text, breaking the responsive e-mail layout.

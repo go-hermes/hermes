@@ -304,6 +304,8 @@
                     width: 100% !important;
                 }
             }
+
+            {{ if and (not (kindIs "invalid" .Email.Body.TemplateOverrides)) (hasKey .Email.Body.TemplateOverrides "additional_styles") (not (eq (index .Email.Body.TemplateOverrides "additional_styles") "")) }} {{ index .Email.Body.TemplateOverrides "additional_styles" | css }} {{ end }}
         </style>
     </head>
 
