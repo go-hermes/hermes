@@ -2,7 +2,7 @@ package hermes
 
 import "fmt"
 
-// Flat is a theme
+// Flat is another built-in theme
 type Flat struct{}
 
 // Name returns the name of the flat theme
