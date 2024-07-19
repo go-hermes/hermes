@@ -30,7 +30,7 @@ Then, start using the package by importing and configuring it:
 // Configure hermes by setting a theme and your product info
 h := hermes.Hermes{
     // Optional Theme
-    // Theme: new(Default) 
+    // Theme: new(Default),
     Product: hermes.Product{
         // Appears in header & footer of e-mails
         Name: "Hermes",
@@ -157,6 +157,104 @@ The following open-source themes are bundled with this package:
 
 <img src="screens/flat/welcome.png" height="200" /> <img src="screens/flat/reset.png" height="200" /> <img src="screens/flat/receipt.png" height="200" />
 
+### Custom Theming
+
+If you want to use your own themes instead of the ones packaged by the Hermes project, you will need to define your own theme in your project. This will need to satisfy the `hermes.Theme` interface.
+
+The following methods will need to be defined:
+
+```go
+type Theme interface {
+	Name() string              // The name of the theme
+	HTMLTemplate() string      // The golang template for HTML emails
+	PlainTextTemplate() string // The golang templte for plain text emails (can be basic HTML)
+}
+```
+
+**Example**
+
+```go
+package hermes_custom_theme
+
+import (
+	"embed"
+    "fmt"
+)
+
+// assuming you have a templates folder as a sibling to this file
+var (
+	//go:embed templates
+	staticFS embed.FS
+)
+
+const (
+	htmlEmail      = "templates/%s.tpl.html"
+	plainTextEmail = "templates/%s.tpl.txt"
+)
+
+func getTemplate(name string) string {
+	htmlBytes, err := staticFS.ReadFile(name)
+
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	return string(htmlBytes)
+}
+
+// CustomThemeOne is a user-defined custom theme
+type CustomThemeOne struct{}
+
+// Name returns the name of the custom theme
+func (ct CustomThemeOne) Name() string {
+	return "custom_theme_one"
+}
+
+// HTMLTemplate returns a Golang template that will generate an HTML email.
+func (ct CustomThemeOne) HTMLTemplate() string {
+	return getTemplate(fmt.Sprintf(htmlEmail, ct.Name()))
+}
+
+// PlainTextTemplate returns a Golang template that will generate an plain text email.
+func (ct CustomThemeOne) PlainTextTemplate() string {
+	return getTemplate(fmt.Sprintf(plainTextEmail, ct.Name()))
+}
+
+// CustomThemeTwo is a user-defined custom theme
+type CustomThemeTwo struct{}
+
+// Name returns the name of the custom theme
+func (ct CustomThemeTwo) Name() string {
+	return "custom_theme_two"
+}
+
+// HTMLTemplate returns a Golang template that will generate an HTML email.
+func (ct CustomThemeTwo) HTMLTemplate() string {
+	return getTemplate(fmt.Sprintf(htmlEmail, ct.Name()))
+}
+
+// PlainTextTemplate returns a Golang template that will generate an plain text email.
+func (ct CustomThemeTwo) PlainTextTemplate() string {
+	return getTemplate(fmt.Sprintf(plainTextEmail, ct.Name()))
+}
+```
+
+Based on the above definitions, the expectations is that there is a file with the given return from the `Name()` function with the extensions (in our case `.tpl.(html | txt)` given the usage of getTemplate). You don't have to do it exactly the way with StaticFS, but you can use this as a quick starting point.
+
+Now that we have our definitions, we can set the Theme field in `hermes.Hermes` to use one of our custom definitions:
+
+**Example**
+
+```go
+
+h := hermes.Hermes{
+    // Set your custom theme here
+    Theme: new(CustomThemeOne),
+    // ... additional fields ...
+}
+
+```
+
 ## RTL Support
 
 To change the default text direction (left-to-right), simply override it as follows:
@@ -199,7 +297,7 @@ To customize the `Copyright`, override it when initializing `Hermes` within your
 // Configure hermes by setting a theme and your product info
 h := hermes.Hermes{
     // Optional Theme
-    // Theme: new(Default)
+    // Theme: new(Default),
     Product: hermes.Product{
         // Appears in header & footer of e-mails
         Name: "Hermes",
@@ -216,7 +314,7 @@ To use a custom fallback text at the end of the email, change the `TroubleText` 
 // Configure hermes by setting a theme and your product info
 h := hermes.Hermes{
     // Optional Theme
-    // Theme: new(Default)
+    // Theme: new(Default),
     Product: hermes.Product{
         // Custom trouble text
         TroubleText: "If the {ACTION}-button is not working for you, just copy and paste the URL below into your web browser."
