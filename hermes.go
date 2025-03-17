@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"html/template"
 
-	"github.com/Masterminds/sprig"
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/jaytaylor/html2text"
 	"github.com/russross/blackfriday/v2"
 	"github.com/sirupsen/logrus"
