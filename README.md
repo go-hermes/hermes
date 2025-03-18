@@ -21,7 +21,7 @@ First install the package:
 go get -u github.com/go-hermes/hermes/v2
 ```
 
-> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.22 with gomodules enabled.
+> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.23 with gomodules enabled.
 > You can still use an Hermes release compatible with prior Go versions by using *v1.2.0* release
 
 Then, start using the package by importing and configuring it:
