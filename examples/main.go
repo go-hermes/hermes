@@ -12,6 +12,15 @@ import (
 	"golang.org/x/term"
 )
 
+var (
+	errEmptyServerConfig   = errors.New("SMTP server config is empty")
+	errEmptyPort           = errors.New("SMTP port config is empty")
+	errEmptyUser           = errors.New("SMTP user is empty")
+	errEmptySenderIdentity = errors.New("SMTP sender identity is empty")
+	errEmptySenderEmail    = errors.New("SMTP sender email is empty")
+	errEmptyReceiverEmails = errors.New("no receiver emails configured")
+)
+
 type example interface {
 	Email() hermes.Email
 	Name() string
@@ -98,7 +107,7 @@ func generateEmails(h hermes.Hermes, email hermes.Email, example string) {
 	if err != nil {
 		panic(err)
 	}
-	err = os.MkdirAll(h.Theme.Name(), 0744)
+	err = os.MkdirAll(h.Theme.Name(), 0750)
 	if err != nil {
 		panic(err)
 	}
@@ -137,26 +146,27 @@ type sendOptions struct {
 func send(smtpConfig smtpAuthentication, options sendOptions, htmlBody string, txtBody string) error {
 
 	if smtpConfig.Server == "" {
-		return errors.New("SMTP server config is empty")
+		return errEmptyServerConfig
 	}
+
 	if smtpConfig.Port == 0 {
-		return errors.New("SMTP port config is empty")
+		return errEmptyPort
 	}
 
 	if smtpConfig.SMTPUser == "" {
-		return errors.New("SMTP user is empty")
+		return errEmptyUser
 	}
 
 	if smtpConfig.SenderIdentity == "" {
-		return errors.New("SMTP sender identity is empty")
+		return errEmptySenderIdentity
 	}
 
 	if smtpConfig.SenderEmail == "" {
-		return errors.New("SMTP sender email is empty")
+		return errEmptySenderEmail
 	}
 
 	if options.To == "" {
-		return errors.New("no receiver emails configured")
+		return errEmptyReceiverEmails
 	}
 
 	from := mail.Address{
