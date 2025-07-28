@@ -21,8 +21,21 @@ First install the package:
 go get -u github.com/go-hermes/hermes/v2
 ```
 
-> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.23 with gomodules enabled.
-> You can still use an Hermes release compatible with prior Go versions by using *v1.2.0* release
+> Starting from release *v2.0.0*, Hermes uses [Go modules](https://github.com/golang/go/wiki/Modules). The latest version of Hermes requires at least Go 1.24 with gomodules enabled.
+> You can still use an Hermes release compatible with prior Go versions by using *v1.3.0* release
+go get github.com/go-hermes/hermes@v1.3.0
+```
+
+## Migrate back from `v2` to `v1.3.0`
+
+At the time of `v2` creation, Go modules logic and best practices were still unsure. v1 did not use modules.
+Having a dedicated `v2` module is meant to be used for projects hosting and maintaining `v1` and `v2` at the same time, so people can use both versions at the same time. There is no need for that in this kind of project.
+Now that go modules usage is standard, in `v1`, starting from `v1.3.0` tags, we decided to migrate back to `github.com/go-hermes/hermes` instead of `github.com/go-hermes/hermes/v2`.
+`v2` tags will still use `github.com/go-hermes/hermes/v2` as the import path, normal way will use `github.com/go-hermes/hermes` as the import path.
+
+So, just replace your import path from `github.com/go-hermes/hermes/v2` to `github.com/go-hermes/hermes` and run `go get github.com/go-hermes/hermes@v1.3.0` (or newer) to update the dependency.
+
+## Use Hermes
 
 Then, start using the package by importing and configuring it:
 
@@ -79,7 +92,7 @@ if err != nil {
 }
 
 // Optionally, preview the generated HTML e-mail by writing it to a local file
-err = ioutil.WriteFile("preview.html", []byte(emailBody), 0644)
+err = os.WriteFile("preview.html", []byte(emailBody), 0644)
 if err != nil {
     panic(err) // Tip: Handle error with something else than a panic ;)
 }
@@ -106,7 +119,7 @@ Need help, or have questions? Just reply to this email, we'd love to help.
 Yours truly,
 Hermes - https://example-hermes.com/
 
-Copyright © 2017 Hermes. All rights reserved.
+Copyright © 2025 Hermes. All rights reserved.
 ```
 
 > Theme templates will be embedded in your application binary. If you want to use external templates (for configuration), use your own theme by implementing `hermes.Theme` interface with code searching for your files.
@@ -303,7 +316,7 @@ h := hermes.Hermes{
         Name: "Hermes",
         Link: "https://example-hermes.com/",
         // Custom copyright notice
-        Copyright: "Copyright © 2017 Dharma Initiative. All rights reserved."
+        Copyright: "Copyright © 2025 Dharma Initiative. All rights reserved."
     },
 }
 ```
@@ -439,7 +452,7 @@ If you need more flexibility in the content of your generated e-mail, while keep
 email := hermes.Email{
 		Body: hermes.Body{
 			FreeMarkdown: `
-> _Hermes_ service will shutdown the **1st August 2017** for maintenance operations. 
+> _Hermes_ service will shutdown the **1st August 2025** for maintenance operations. 
 
 Services will be unavailable based on the following schedule:
 
@@ -473,7 +486,7 @@ Hi Jon Snow,
 > 
 > 
 > 
-> Hermes service will shutdown the *1st August 2017* for maintenance
+> Hermes service will shutdown the *1st August 2025* for maintenance
 > operations.
 > 
 > 
@@ -493,7 +506,7 @@ Feel free to contact us for any question regarding this matter at support@hermes
 Yours truly,
 Hermes - https://example-hermes.com/
 
-Copyright © 2017 Hermes. All rights reserved.
+Copyright © 2025 Hermes. All rights reserved.
 ```
 
 Be aware that this content will replace existing tables, dictionary and actions. Only intros, outros, header and footer will be kept.
