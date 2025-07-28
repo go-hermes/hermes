@@ -2,6 +2,12 @@ package hermes
 
 import (
 	"fmt"
+	"html/template"
+)
+
+var (
+	parsedDefaultHTML      = template.Must(TemplateBase().Parse(Default{}.HTMLTemplate()))
+	parsedDefaultPlainText = template.Must(TemplateBase().Parse(Default{}.PlainTextTemplate()))
 )
 
 // Default is the theme by default
@@ -20,4 +26,12 @@ func (dt Default) HTMLTemplate() string {
 // PlainTextTemplate returns a Golang template that will generate an plain text email.
 func (dt Default) PlainTextTemplate() string {
 	return getTemplate(fmt.Sprintf(plainTextEmail, dt.Name()))
+}
+
+func (dt Default) ParsedHTMLTemplate() (*template.Template, error) {
+	return parsedDefaultHTML, nil
+}
+
+func (dt Default) ParsedPlainTextTemplate() (*template.Template, error) {
+	return parsedDefaultPlainText, nil
 }

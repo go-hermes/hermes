@@ -20,11 +20,29 @@ type Hermes struct {
 	DisableCSSInlining bool
 }
 
+type ThemedTemplate interface {
+	Theme
+	ParsedHTMLTheme
+	ParsedPlainTextTheme
+}
+
 // Theme is an interface to implement when creating a new theme
 type Theme interface {
 	Name() string              // The name of the theme
 	HTMLTemplate() string      // The golang template for HTML emails
 	PlainTextTemplate() string // The golang templte for plain text emails (can be basic HTML)
+}
+
+// ParsedHTMLTheme is implemented by themes that parse their HTML
+// template themselves.
+type ParsedHTMLTheme interface {
+	ParsedHTMLTemplate() (*template.Template, error)
+}
+
+// ParsedPlainTextTheme is implemented by themes that parse their
+// plain text template themselves.
+type ParsedPlainTextTheme interface {
+	ParsedPlainTextTemplate() (*template.Template, error)
 }
 
 // TextDirection of the text in HTML email
@@ -190,7 +208,11 @@ func (h *Hermes) GenerateHTML(email Email) (string, error) {
 		return "", err
 	}
 
-	return h.generateTemplate(email, h.Theme.HTMLTemplate())
+	t, err := getHTMLTemplate(h.Theme)
+	if err != nil {
+		return "", err
+	}
+	return h.generateTemplate(email, t)
 }
 
 // GeneratePlainText generates the email body from data
@@ -200,7 +222,12 @@ func (h *Hermes) GeneratePlainText(email Email) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	template, err := h.generateTemplate(email, h.Theme.PlainTextTemplate())
+
+	t, err := getPlainTextTemplate(h.Theme)
+	if err != nil {
+		return "", err
+	}
+	template, err := h.generateTemplate(email, t)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +235,7 @@ func (h *Hermes) GeneratePlainText(email Email) (string, error) {
 	return html2text.FromString(template, html2text.Options{PrettyTables: true})
 }
 
-func (h *Hermes) generateTemplate(email Email, tplt string) (string, error) {
+func (h *Hermes) generateTemplate(email Email, t *template.Template) (string, error) {
 	err := setDefaultEmailValues(&email)
 	if err != nil {
 		return "", err
@@ -217,15 +244,6 @@ func (h *Hermes) generateTemplate(email Email, tplt string) (string, error) {
 	if len(email.Body.Table.Data) > 0 {
 		logrus.Warn("Email.Body.Table field is deprecated, please use Email.Body.Tables instead")
 		email.Body.Tables = append(email.Body.Tables, email.Body.Table)
-	}
-
-	// Generate the email from Golang template
-	// Allow usage of simple function from sprig : https://github.com/Masterminds/sprig
-	t, err := template.New("hermes").Funcs(sprig.FuncMap()).Funcs(templateFuncs).Funcs(template.FuncMap{
-		"safe": func(s string) template.HTML { return template.HTML(s) }, // Used for keeping comments in generated template
-	}).Parse(tplt)
-	if err != nil {
-		return "", err
 	}
 
 	var b bytes.Buffer
@@ -251,4 +269,28 @@ func (h *Hermes) generateTemplate(email Email, tplt string) (string, error) {
 	}
 
 	return html, nil
+}
+
+// TemplateBase returns a base template from which to parse others in
+// order to provide functionality that is added by this package. It is
+// the base from which raw template sources provided by a theme are
+// parsed.
+func TemplateBase() *template.Template {
+	return template.New("hermes").Funcs(sprig.FuncMap()).Funcs(templateFuncs).Funcs(template.FuncMap{
+		"safe": func(s string) template.HTML { return template.HTML(s) }, // Used for keeping comments in generated template
+	})
+}
+
+func getHTMLTemplate(t Theme) (*template.Template, error) {
+	if t, ok := t.(ParsedHTMLTheme); ok {
+		return t.ParsedHTMLTemplate()
+	}
+	return TemplateBase().Parse(t.HTMLTemplate())
+}
+
+func getPlainTextTemplate(t Theme) (*template.Template, error) {
+	if t, ok := t.(ParsedPlainTextTheme); ok {
+		return t.ParsedPlainTextTemplate()
+	}
+	return TemplateBase().Parse(t.PlainTextTemplate())
 }
