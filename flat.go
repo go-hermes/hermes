@@ -1,6 +1,14 @@
 package hermes
 
-import "fmt"
+import (
+	"fmt"
+	"html/template"
+)
+
+var (
+	parsedFlatHTML      = template.Must(TemplateBase().Parse(Flat{}.HTMLTemplate()))
+	parsedFlatPlainText = template.Must(TemplateBase().Parse(Flat{}.PlainTextTemplate()))
+)
 
 // Flat is another built-in theme
 type Flat struct{}
@@ -18,4 +26,12 @@ func (dt Flat) HTMLTemplate() string {
 // PlainTextTemplate returns a Golang template that will generate an plain text email.
 func (dt Flat) PlainTextTemplate() string {
 	return getTemplate(fmt.Sprintf(plainTextEmail, dt.Name()))
+}
+
+func (dt Flat) ParsedHTMLTemplate() (*template.Template, error) {
+	return parsedFlatHTML, nil
+}
+
+func (dt Flat) ParsedPlainTextTemplate() (*template.Template, error) {
+	return parsedFlatPlainText, nil
 }
