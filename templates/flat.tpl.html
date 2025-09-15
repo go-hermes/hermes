@@ -341,6 +341,7 @@
                                                     {{.Email.Body.Greeting }} {{ .Email.Body.Name }},
                                                 {{ end }}
                                             </h1>
+                                            
                                             <!-- Intros -->
                                             {{ if (ne .Email.Body.IntrosMarkdown "") }}
                                                 {{ .Email.Body.IntrosMarkdown.ToHTML }}
@@ -359,6 +360,7 @@
                                                     {{ end }}
                                                 {{ end }}
                                             {{ end }}
+                                            
                                             <!-- FreeMarkdown -->
                                             {{ if (ne .Email.Body.FreeMarkdown "") }}
                                                 {{ .Email.Body.FreeMarkdown.ToHTML }}

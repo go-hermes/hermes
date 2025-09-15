@@ -326,9 +326,9 @@
                             <td class="email-masthead">
                                 <a class="email-masthead_name" href="{{.Hermes.Product.Link}}" target="_blank">
                                     {{ if .Hermes.Product.Logo }}
-                                    <img src="{{.Hermes.Product.Logo | url }}" class="email-logo" />
+                                        <img src="{{.Hermes.Product.Logo | url }}" class="email-logo" />
                                     {{ else }}
-                                    {{ .Hermes.Product.Name }}
+                                        {{ .Hermes.Product.Name }}
                                     {{ end }}
                                 </a>
                             </td>
@@ -365,9 +365,10 @@
                                                     {{ end }}
                                                 {{ end }}
                                             {{ end }}
-                                                    {{ if (ne .Email.Body.FreeMarkdown "") }}
-                                                        {{ .Email.Body.FreeMarkdown.ToHTML }}
-                                                    {{ else }}
+                                            
+                                            {{ if (ne .Email.Body.FreeMarkdown "") }}
+                                                {{ .Email.Body.FreeMarkdown.ToHTML }}
+                                            {{ else }}
 
                                                 {{ with .Email.Body.Dictionary }}
                                                     {{ if gt (len .) 0 }}
@@ -534,9 +535,9 @@
                                                 {{ end }}
                                             {{ end }}
                                             <p>
-                                            {{.Email.Body.Signature}},
-                                            <br />
-                                            {{.Hermes.Product.Name}}
+                                                {{.Email.Body.Signature}},
+                                                <br />
+                                                {{.Hermes.Product.Name}}
                                             </p>
 
                                             {{ if (eq .Email.Body.FreeMarkdown "") }}
@@ -545,12 +546,12 @@
                                                         <tbody>
                                                             {{ range $action := . }}
                                                                 {{if $action.Button.Text}}
-                                                                <tr>
-                                                                <td>
-                                                                    <p class="sub">{{$.Hermes.Product.TroubleText | replace "{ACTION}" $action.Button.Text}}</p>
-                                                                    <p class="sub"><a href="{{ $action.Button.Link }}">{{ $action.Button.Link }}</a></p>
-                                                                </td>
-                                                                </tr>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <p class="sub">{{$.Hermes.Product.TroubleText | replace "{ACTION}" $action.Button.Text}}</p>
+                                                                            <p class="sub"><a href="{{ $action.Button.Link }}">{{ $action.Button.Link }}</a></p>
+                                                                        </td>
+                                                                    </tr>
                                                                 {{ end }}
                                                             {{ end }}
                                                         </tbody>
@@ -568,7 +569,7 @@
                                     <tr>
                                         <td class="content-cell">
                                             <p class="sub center">
-                                            {{.Hermes.Product.Copyright}}
+                                                {{.Hermes.Product.Copyright}}
                                             </p>
                                         </td>
                                     </tr>

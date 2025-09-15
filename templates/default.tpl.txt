@@ -1,9 +1,9 @@
 <h2>
-  {{if .Email.Body.Title }}
-    {{ .Email.Body.Title }}
-  {{ else }}
-    {{ .Email.Body.Greeting }} {{ .Email.Body.Name }},
-  {{ end }}
+    {{if .Email.Body.Title }}
+        {{ .Email.Body.Title }}
+    {{ else }}
+        {{ .Email.Body.Greeting }} {{ .Email.Body.Name }},
+    {{ end }}
 </h2>
 {{ if (ne .Email.Body.IntrosMarkdown "") }}
     {{ .Email.Body.IntrosMarkdown.ToHTML }}
@@ -14,82 +14,82 @@
         {{ end }}
     {{ end }}
 {{ else }}
-  {{ with .Email.Body.Intros }}
-    {{ range $line := . }}
-      <p>{{ $line }}</p>
+    {{ with .Email.Body.Intros }}
+        {{ range $line := . }}
+            <p>{{ $line }}</p>
+        {{ end }}
     {{ end }}
-  {{ end }}
 {{ end }}
 {{ if (ne .Email.Body.FreeMarkdown "") }}
-  {{ .Email.Body.FreeMarkdown.ToHTML }}
+    {{ .Email.Body.FreeMarkdown.ToHTML }}
 {{ else }}
-  {{ with .Email.Body.Dictionary }}
-    <ul>
-    {{ range $entry := . }}
-      <li>
-        {{ $entry.Key }}: {{ if gt (len $entry.Value) 0 }}
-                            {{ $entry.Value }}
-                          {{ else if gt (len $entry.UnsafeValue) 0 }}
-                              {{ $entry.UnsafeValue }}
-                          {{ else }}
-                              No Value Set
-                          {{ end }}
-      </li>
-    {{ end }}
-    </ul>
-  {{ end }}
-  {{ with .Email.Body.Tables }}
-    {{ if gt (len .) 0 }}
-      {{ range $table := . }}
-        {{ $data := .Data }}
-        {{ if eq (len $data) 0 }}
-          {{ $data = .Table.Data }}
-        {{ end }}
-        {{ $columns := .Columns }}
-        {{ if gt (len $data) 0 }}
-          {{ if $table.Title }}
-            <span style="text-align: left; font-weight: bold;">{{ $table.Title }}</span>
-          {{ end }}
-          <table class="data-table" width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              {{ $col := index $data 0 }}
-              {{ range $entry := $col }}
-                <th>{{ $entry.Key }} </th>
-              {{ end }}
-            </tr>
-            {{ range $row := $data }}
-              <tr>
-                {{ range $cell := $row }}
-                  <td>
-                    {{ if gt (len $cell.Value) 0 }}
-                        {{ $cell.Value }}
-                    {{ else if gt (len $cell.UnsafeValue) 0 }}
-                        {{ $cell.UnsafeValue }}
-                    {{ else }}
-                        No Value Set
-                    {{ end }}
-                  </td>
-                {{ end }}
-              </tr>
+    {{ with .Email.Body.Dictionary }}
+        <ul>
+            {{ range $entry := . }}
+                <li>
+                    {{ $entry.Key }}: {{ if gt (len $entry.Value) 0 }}
+                                        {{ $entry.Value }}
+                                    {{ else if gt (len $entry.UnsafeValue) 0 }}
+                                        {{ $entry.UnsafeValue }}
+                                    {{ else }}
+                                        No Value Set
+                                    {{ end }}
+                </li>
             {{ end }}
-          </table>
-        {{ end }}
-      {{ end }}
+        </ul>
     {{ end }}
-  {{ end }}
-  {{ with .Email.Body.Actions }} 
-    {{ range $action := . }}
-      <p>
-        {{ $action.Instructions }} 
-        {{ if $action.InviteCode }}
-          {{ $action.InviteCode }}
+    {{ with .Email.Body.Tables }}
+        {{ if gt (len .) 0 }}
+            {{ range $table := . }}
+                {{ $data := .Data }}
+                {{ if eq (len $data) 0 }}
+                    {{ $data = .Table.Data }}
+                {{ end }}
+                {{ $columns := .Columns }}
+                {{ if gt (len $data) 0 }}
+                    {{ if $table.Title }}
+                        <span style="text-align: left; font-weight: bold;">{{ $table.Title }}</span>
+                    {{ end }}
+                    <table class="data-table" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                            {{ $col := index $data 0 }}
+                            {{ range $entry := $col }}
+                                <th>{{ $entry.Key }} </th>
+                            {{ end }}
+                        </tr>
+                        {{ range $row := $data }}
+                            <tr>
+                                {{ range $cell := $row }}
+                                    <td>
+                                        {{ if gt (len $cell.Value) 0 }}
+                                            {{ $cell.Value }}
+                                        {{ else if gt (len $cell.UnsafeValue) 0 }}
+                                            {{ $cell.UnsafeValue }}
+                                        {{ else }}
+                                            No Value Set
+                                        {{ end }}
+                                    </td>
+                                {{ end }}
+                            </tr>
+                        {{ end }}
+                    </table>
+                {{ end }}
+            {{ end }}
         {{ end }}
-        {{ if $action.Button.Link }}
-          {{ $action.Button.Link }}
-        {{ end }}
-      </p> 
     {{ end }}
-  {{ end }}
+    {{ with .Email.Body.Actions }} 
+        {{ range $action := . }}
+            <p>
+                {{ $action.Instructions }} 
+                {{ if $action.InviteCode }}
+                    {{ $action.InviteCode }}
+                {{ end }}
+                {{ if $action.Button.Link }}
+                    {{ $action.Button.Link }}
+                {{ end }}
+            </p> 
+        {{ end }}
+    {{ end }}
 {{ end }}
 {{ if (ne .Email.Body.OutrosMarkdown "") }}
     {{ .Email.Body.OutrosMarkdown.ToHTML }}
@@ -100,11 +100,11 @@
         {{ end }}
     {{ end }}
 {{ else }}
-  {{ with .Email.Body.Outros }} 
-    {{ range $line := . }}
-      <p>{{ $line }}<p>
+    {{ with .Email.Body.Outros }} 
+        {{ range $line := . }}
+            <p>{{ $line }}</p>
+        {{ end }}
     {{ end }}
-  {{ end }}
 {{ end }}
 <p>{{.Email.Body.Signature}},<br>{{.Hermes.Product.Name}} - {{.Hermes.Product.Link}}</p>
 
