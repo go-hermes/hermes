@@ -20,12 +20,13 @@ func (dt Flat) Name() string {
 
 // HTMLTemplate returns a Golang template that will generate an HTML email.
 func (dt Flat) HTMLTemplate() string {
-	return getTemplate(fmt.Sprintf(htmlEmail, dt.Name()))
+	// Reuse the default HTML template; styling differences handled via CSS & template vars
+	return getTemplate(fmt.Sprintf(htmlEmail, "default"))
 }
 
 // PlainTextTemplate returns a Golang template that will generate an plain text email.
 func (dt Flat) PlainTextTemplate() string {
-	return getTemplate(fmt.Sprintf(plainTextEmail, dt.Name()))
+	return getTemplate(fmt.Sprintf(plainTextEmail, "default"))
 }
 
 func (dt Flat) ParsedHTMLTemplate() (*template.Template, error) {
