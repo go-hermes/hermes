@@ -223,6 +223,16 @@ func (ct CustomThemeOne) Name() string {
 	return "custom_theme_one"
 }
 
+// Name returns the style definitions
+func (ct CustomThemeOne) Styles() hermes.StylesDefinition {
+	styles := hermes.GetDefaultStyles()
+
+    // customize the defaults OR define your own StylesDefinition
+    // underlying data type is map[string]map[string]any
+
+    return styles
+}
+
 // HTMLTemplate returns a Golang template that will generate an HTML email.
 func (ct CustomThemeOne) HTMLTemplate() string {
 	return getTemplate(fmt.Sprintf(htmlEmail, ct.Name()))
