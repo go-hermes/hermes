@@ -18,6 +18,19 @@ func (dt Flat) Name() string {
 	return "flat"
 }
 
+func (dt Flat) Styles() StylesDefinition {
+	styles := GetDefaultStyles()
+
+	// Flat theme customizations
+	styles["body"]["background-color"] = "#2c3e50"
+	styles[".email-wrapper"]["background-color"] = "#2c3e50"
+	styles[".email-footer p"]["color"] = "#eaeaea"
+	styles[".button"]["background-color"] = "#00948d"
+	styles[".button"]["border-radius"] = "0"
+
+	return styles
+}
+
 // HTMLTemplate returns a Golang template that will generate an HTML email.
 func (dt Flat) HTMLTemplate() string {
 	// Reuse the default HTML template; styling differences handled via CSS & template vars

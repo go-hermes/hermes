@@ -2,6 +2,7 @@ package hermes
 
 import (
 	"embed"
+	"encoding/json"
 
 	"github.com/sirupsen/logrus"
 )
@@ -24,4 +25,19 @@ func getTemplate(name string) string {
 	}
 
 	return string(htmlBytes)
+}
+
+func GetDefaultStyles() StylesDefinition {
+	stylesBytes, err := staticFS.ReadFile("templates/default.css.json")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	var styles StylesDefinition
+	err = json.Unmarshal(stylesBytes, &styles)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	return styles
 }
