@@ -36,6 +36,46 @@ type Theme interface {
 	PlainTextTemplate() string // The golang templte for plain text emails (can be basic HTML)
 }
 
+func (s StylesDefinition) MergeCSSWithTheme(theme Theme) StylesDefinition {
+	themeStyles := theme.Styles()
+	for sel, props := range s {
+		if defProps, exists := themeStyles[sel]; exists {
+			for k, v := range props {
+				defProps[k] = v
+			}
+			themeStyles[sel] = defProps
+		} else {
+			themeStyles[sel] = props
+		}
+	}
+	return themeStyles
+}
+
+// normalizeStyles attempts to coerce various accepted override map types into StylesDefinition.
+// Supports:
+//   - StylesDefinition (already correct)
+//   - map[string]map[string]interface{} (legacy test usage)
+//
+// Returns nil if the input type is unsupported.
+func normalizeStyles(v any) StylesDefinition {
+	switch css := v.(type) {
+	case StylesDefinition:
+		return css
+	case map[string]map[string]interface{}:
+		out := StylesDefinition{}
+		for sel, props := range css {
+			cp := map[string]any{}
+			for k, val := range props {
+				cp[k] = val
+			}
+			out[sel] = cp
+		}
+		return out
+	default:
+		return nil
+	}
+}
+
 // ParsedHTMLTheme is implemented by themes that parse their HTML
 // template themselves.
 type ParsedHTMLTheme interface {
@@ -129,9 +169,13 @@ type Entry struct {
 
 // Table is an table where you can put data (pricing grid, a bill, and so on)
 type Table struct {
-	Title   string    // Title of the table
-	Data    [][]Entry // Contains data
-	Columns Columns   // Contains meta-data for display purpose (width, alignement)
+	Title        string        // Title of the table
+	Data         [][]Entry     // Contains data
+	Columns      Columns       // Contains meta-data for display purpose (width, alignement)
+	Class        string        // Optional CSS class applied to the wrapping table element
+	TitleUnsafe  template.HTML // Optional unsafe HTML that replaces Title when set
+	Footer       string        // Optional footer text rendered below the table
+	FooterUnsafe template.HTML // Optional unsafe HTML footer rendered below the table (overrides Footer when set)
 }
 
 // Columns contains meta-data for the different columns
@@ -195,23 +239,15 @@ func setDefaultEmailValues(h *Hermes, e *Email) error {
 		}
 	}
 
-	// Merge user overrides if present
+	// Merge user overrides if present using helper normalization
 	if e.Body.TemplateOverrides != nil {
-		if userCSS, ok := e.Body.TemplateOverrides["css"].(map[string]map[string]interface{}); ok {
-			for sel, props := range userCSS {
-				if defProps, exists := styles[sel]; exists {
-					for k, v := range props {
-						defProps[k] = v
-					}
-					styles[sel] = defProps
-				} else {
-					styles[sel] = props
-				}
+		if raw, ok := e.Body.TemplateOverrides["css"]; ok {
+			if userStyles := normalizeStyles(raw); userStyles != nil {
+				styles = userStyles.MergeCSSWithTheme(h.Theme)
 			}
-			e.Body.TemplateOverrides["css"] = styles
-		} else {
-			e.Body.TemplateOverrides["css"] = styles
 		}
+		// ensure css key reflects merged styles regardless of override presence
+		e.Body.TemplateOverrides["css"] = styles
 	} else {
 		e.Body.TemplateOverrides = map[string]any{"css": styles}
 	}

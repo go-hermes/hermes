@@ -133,10 +133,12 @@
                                                         {{ end }}
                                                         {{ $columns := .Columns }}
                                                         {{ if gt (len $data) 0 }}
-                                                            <table class="data-wrapper" width="100%" cellpadding="0" cellspacing="0">
-                                                                {{ if $table.Title }}
-                                                                    <caption>{{ $table.Title }}</caption>
-                                                                {{ end }}
+                                                            {{ if $table.TitleUnsafe }}
+                                                                <div class="data-table-title-unsafe">{{$table.TitleUnsafe}}</div>
+                                                            {{ else if $table.Title }}
+                                                                <div class="data-table-title">{{$table.Title}}</div>
+                                                            {{ end }}
+                                                            <table class="data-wrapper{{ with $table.Class }} {{ . }}{{ end }}" width="100%" cellpadding="0" cellspacing="0">
                                                                 <tr>
                                                                     <td colspan="2">
                                                                         <table class="data-table" width="100%" cellpadding="0" cellspacing="0">
@@ -170,6 +172,11 @@
                                                                     </td>
                                                                 </tr>
                                                             </table>
+                                                            {{ if $table.FooterUnsafe }}
+                                                                <div class="table-footer">{{$table.FooterUnsafe}}</div>
+                                                            {{ else if $table.Footer }}
+                                                                <div class="table-footer">{{$table.Footer}}</div>
+                                                            {{ end }}
                                                         {{ end }}
                                                     {{ end }}
                                                 {{ end }}
