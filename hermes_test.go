@@ -955,7 +955,7 @@ func TestHermes_Default(t *testing.T) {
 	assert.NoError(t, err)
 
 	email := Email{}
-	err = setDefaultEmailValues(&email)
+	err = setDefaultEmailValues(&h, &email)
 	assert.NoError(t, err)
 
 	assert.Equal(t, TDLeftToRight, h.TextDirection)

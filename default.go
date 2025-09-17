@@ -18,6 +18,10 @@ func (dt Default) Name() string {
 	return "default"
 }
 
+func (dt Default) Styles() StylesDefinition {
+	return GetDefaultStyles()
+}
+
 // HTMLTemplate returns a Golang template that will generate an HTML email.
 func (dt Default) HTMLTemplate() string {
 	return getTemplate(fmt.Sprintf(htmlEmail, dt.Name()))

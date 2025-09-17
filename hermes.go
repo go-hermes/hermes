@@ -26,11 +26,54 @@ type ThemedTemplate interface {
 	ParsedPlainTextTheme
 }
 
+type StylesDefinition map[string]map[string]any
+
 // Theme is an interface to implement when creating a new theme
 type Theme interface {
 	Name() string              // The name of the theme
+	Styles() StylesDefinition  // The CSS styles definition for the theme
 	HTMLTemplate() string      // The golang template for HTML emails
 	PlainTextTemplate() string // The golang templte for plain text emails (can be basic HTML)
+}
+
+func (s StylesDefinition) MergeCSSWithTheme(theme Theme) StylesDefinition {
+	themeStyles := theme.Styles()
+	for sel, props := range s {
+		if defProps, exists := themeStyles[sel]; exists {
+			for k, v := range props {
+				defProps[k] = v
+			}
+			themeStyles[sel] = defProps
+		} else {
+			themeStyles[sel] = props
+		}
+	}
+	return themeStyles
+}
+
+// normalizeStyles attempts to coerce various accepted override map types into StylesDefinition.
+// Supports:
+//   - StylesDefinition (already correct)
+//   - map[string]map[string]interface{} (legacy test usage)
+//
+// Returns nil if the input type is unsupported.
+func normalizeStyles(v any) StylesDefinition {
+	switch css := v.(type) {
+	case StylesDefinition:
+		return css
+	case map[string]map[string]interface{}:
+		out := StylesDefinition{}
+		for sel, props := range css {
+			cp := map[string]any{}
+			for k, val := range props {
+				cp[k] = val
+			}
+			out[sel] = cp
+		}
+		return out
+	default:
+		return nil
+	}
 }
 
 // ParsedHTMLTheme is implemented by themes that parse their HTML
@@ -126,9 +169,13 @@ type Entry struct {
 
 // Table is an table where you can put data (pricing grid, a bill, and so on)
 type Table struct {
-	Title   string    // Title of the table
-	Data    [][]Entry // Contains data
-	Columns Columns   // Contains meta-data for display purpose (width, alignement)
+	Title        string        // Title of the table
+	Data         [][]Entry     // Contains data
+	Columns      Columns       // Contains meta-data for display purpose (width, alignement)
+	Class        string        // Optional CSS class applied to the wrapping table element
+	TitleUnsafe  template.HTML // Optional unsafe HTML that replaces Title when set
+	Footer       string        // Optional footer text rendered below the table
+	FooterUnsafe template.HTML // Optional unsafe HTML footer rendered below the table (overrides Footer when set)
 }
 
 // Columns contains meta-data for the different columns
@@ -159,7 +206,7 @@ type Template struct {
 	Email  Email
 }
 
-func setDefaultEmailValues(e *Email) error {
+func setDefaultEmailValues(h *Hermes, e *Email) error {
 	// Default values of an email
 	defaultEmail := Email{
 		Body: Body{
@@ -172,7 +219,40 @@ func setDefaultEmailValues(e *Email) error {
 	}
 	// Merge the given email with default one
 	// Default one overrides all zero values
-	return mergo.Merge(e, defaultEmail)
+	err := mergo.Merge(e, defaultEmail)
+	if err != nil {
+		return err
+	}
+
+	styles := h.Theme.Styles()
+
+	// Handle body_width override
+	if e.Body.TemplateOverrides != nil {
+		if bodyWidth, ok := e.Body.TemplateOverrides["body_width"].(string); ok && bodyWidth != "" {
+			// Update email-body_inner and email-footer widths
+			if styles[".email-body_inner"] != nil {
+				styles[".email-body_inner"]["width"] = bodyWidth
+			}
+			if styles[".email-footer"] != nil {
+				styles[".email-footer"]["width"] = bodyWidth
+			}
+		}
+	}
+
+	// Merge user overrides if present using helper normalization
+	if e.Body.TemplateOverrides != nil {
+		if raw, ok := e.Body.TemplateOverrides["css"]; ok {
+			if userStyles := normalizeStyles(raw); userStyles != nil {
+				styles = userStyles.MergeCSSWithTheme(h.Theme)
+			}
+		}
+		// ensure css key reflects merged styles regardless of override presence
+		e.Body.TemplateOverrides["css"] = styles
+	} else {
+		e.Body.TemplateOverrides = map[string]any{"css": styles}
+	}
+
+	return nil
 }
 
 // default values of the engine
@@ -236,7 +316,7 @@ func (h *Hermes) GeneratePlainText(email Email) (string, error) {
 }
 
 func (h *Hermes) generateTemplate(email Email, t *template.Template) (string, error) {
-	err := setDefaultEmailValues(&email)
+	err := setDefaultEmailValues(h, &email)
 	if err != nil {
 		return "", err
 	}

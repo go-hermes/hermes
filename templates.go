@@ -25,3 +25,11 @@ func getTemplate(name string) string {
 
 	return string(htmlBytes)
 }
+
+func GetDefaultStyles() StylesDefinition {
+	cssBytes, err := staticFS.ReadFile("templates/default.css")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	return ParseStylesDefinition(string(cssBytes))
+}
