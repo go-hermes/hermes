@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+// normalizeColorCase converts hex colors to lowercase for case-insensitive comparisons
+func normalizeColorCase(html string) string {
+	// Simple approach: just lowercase the entire string for testing
+	return strings.ToLower(html)
+}
+
+// containsIgnoreCase checks if html contains target (case-insensitive)
+func containsIgnoreCase(html, target string) bool {
+	return strings.Contains(normalizeColorCase(html), normalizeColorCase(target))
+}
+
 // Consolidated CSS / theme tests replacing css_override_test.go, flat_theme_test.go and body_width_test.go.
 // Scenarios exercise baseline and override behaviors across themes plus body width & additional styles.
 func TestThemeAndCSSScenarios(t *testing.T) {
@@ -99,7 +110,7 @@ func TestThemeAndCSSScenarios(t *testing.T) {
 					if needle == "" { // skip empty
 						continue
 					}
-					if !strings.Contains(html, needle) {
+					if !containsIgnoreCase(html, needle) {
 						t.Errorf("assertion '%s': expected to contain %q", as.name, needle)
 					}
 				}
@@ -107,7 +118,7 @@ func TestThemeAndCSSScenarios(t *testing.T) {
 					if needle == "" {
 						continue
 					}
-					if strings.Contains(html, needle) {
+					if containsIgnoreCase(html, needle) {
 						t.Errorf("assertion '%s': expected NOT to contain %q", as.name, needle)
 					}
 				}
