@@ -1,6 +1,7 @@
 package hermes
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -945,6 +946,384 @@ func TestHermes_TextDirectionAsDefault(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TDLeftToRight, h.TextDirection)
 	assert.Equal(t, "default", h.Theme.Name())
+}
+
+// ErrorTheme is a test theme that always returns errors for template methods
+type ErrorTheme struct{}
+
+func (et ErrorTheme) Name() string {
+	return "error"
+}
+
+func (et ErrorTheme) Styles() StylesDefinition {
+	return StylesDefinition{}
+}
+
+func (et ErrorTheme) HTMLTemplate() string {
+	return "{{invalid syntax for template"
+}
+
+func (et ErrorTheme) PlainTextTemplate() string {
+	return "{{invalid syntax for template"
+}
+
+// ErrorParsedTheme implements parsed template interfaces with errors
+type ErrorParsedTheme struct{}
+
+func (ept ErrorParsedTheme) Name() string {
+	return "errorparsed"
+}
+
+func (ept ErrorParsedTheme) Styles() StylesDefinition {
+	return StylesDefinition{}
+}
+
+func (ept ErrorParsedTheme) HTMLTemplate() string {
+	return "<html>Valid HTML</html>"
+}
+
+func (ept ErrorParsedTheme) PlainTextTemplate() string {
+	return "Valid plain text"
+}
+
+func (ept ErrorParsedTheme) ParsedHTMLTemplate() (*template.Template, error) {
+	return nil, errors.New("parsed HTML template error")
+}
+
+func (ept ErrorParsedTheme) ParsedPlainTextTemplate() (*template.Template, error) {
+	return nil, errors.New("parsed plain text template error")
+}
+
+// ValidParsedTheme implements parsed template interfaces without errors
+type ValidParsedTheme struct{}
+
+func (vpt ValidParsedTheme) Name() string {
+	return "validparsed"
+}
+
+func (vpt ValidParsedTheme) Styles() StylesDefinition {
+	return StylesDefinition{}
+}
+
+func (vpt ValidParsedTheme) HTMLTemplate() string {
+	return "<html>{{.Product.Name}}</html>"
+}
+
+func (vpt ValidParsedTheme) PlainTextTemplate() string {
+	return "{{.Product.Name}}"
+}
+
+func (vpt ValidParsedTheme) ParsedHTMLTemplate() (*template.Template, error) {
+	return TemplateBase().Parse("<html>{{.Product.Name}}</html>")
+}
+
+func (vpt ValidParsedTheme) ParsedPlainTextTemplate() (*template.Template, error) {
+	return TemplateBase().Parse("{{.Product.Name}}")
+}
+
+func TestGetHTMLTemplate(t *testing.T) {
+	t.Run("RegularTheme", func(t *testing.T) {
+		theme := new(Default)
+		tmpl, err := getHTMLTemplate(theme)
+		assert.NoError(t, err)
+		assert.NotNil(t, tmpl)
+	})
+
+	t.Run("ParsedThemeSuccess", func(t *testing.T) {
+		theme := ValidParsedTheme{}
+		tmpl, err := getHTMLTemplate(theme)
+		assert.NoError(t, err)
+		assert.NotNil(t, tmpl)
+	})
+
+	t.Run("ParsedThemeError", func(t *testing.T) {
+		theme := ErrorParsedTheme{}
+		tmpl, err := getHTMLTemplate(theme)
+		assert.Error(t, err)
+		assert.Nil(t, tmpl)
+		assert.Contains(t, err.Error(), "parsed HTML template error")
+	})
+
+	t.Run("InvalidTemplateString", func(t *testing.T) {
+		theme := ErrorTheme{}
+		tmpl, err := getHTMLTemplate(theme)
+		assert.Error(t, err)
+		assert.Nil(t, tmpl)
+	})
+}
+
+func TestGetPlainTextTemplate(t *testing.T) {
+	t.Run("RegularTheme", func(t *testing.T) {
+		theme := new(Default)
+		tmpl, err := getPlainTextTemplate(theme)
+		assert.NoError(t, err)
+		assert.NotNil(t, tmpl)
+	})
+
+	t.Run("ParsedThemeSuccess", func(t *testing.T) {
+		theme := ValidParsedTheme{}
+		tmpl, err := getPlainTextTemplate(theme)
+		assert.NoError(t, err)
+		assert.NotNil(t, tmpl)
+	})
+
+	t.Run("ParsedThemeError", func(t *testing.T) {
+		theme := ErrorParsedTheme{}
+		tmpl, err := getPlainTextTemplate(theme)
+		assert.Error(t, err)
+		assert.Nil(t, tmpl)
+		assert.Contains(t, err.Error(), "parsed plain text template error")
+	})
+
+	t.Run("InvalidTemplateString", func(t *testing.T) {
+		theme := ErrorTheme{}
+		tmpl, err := getPlainTextTemplate(theme)
+		assert.Error(t, err)
+		assert.Nil(t, tmpl)
+	})
+}
+
+func TestFlatStyles_EdgeCases(t *testing.T) {
+	t.Run("FlatStylesCloning", func(t *testing.T) {
+		flat := Flat{}
+		styles1 := flat.Styles()
+		styles2 := flat.Styles()
+
+		// Verify deep cloning - modifying one shouldn't affect the other
+		if bodyStyles1, ok := styles1["body"]; ok {
+			bodyStyles1["test-property"] = "test-value"
+		}
+
+		if bodyStyles2, ok := styles2["body"]; ok {
+			_, hasTestProp := bodyStyles2["test-property"]
+			assert.False(t, hasTestProp, "Styles should be deeply cloned")
+		}
+	})
+
+	t.Run("FlatStylesDefensiveMutation", func(t *testing.T) {
+		flat := Flat{}
+		styles := flat.Styles()
+
+		// Verify that flat-specific styles are applied
+		assert.Contains(t, styles, "body")
+		assert.Contains(t, styles, ".email-wrapper")
+		assert.Contains(t, styles, ".email-footer p")
+		assert.Contains(t, styles, ".button")
+
+		bodyStyles := styles["body"]
+		assert.Equal(t, "#2c3e50", bodyStyles["background-color"])
+
+		buttonStyles := styles[".button"]
+		assert.Equal(t, "#00948d", buttonStyles["background-color"])
+		assert.Equal(t, "0", buttonStyles["border-radius"])
+	})
+
+	t.Run("FlatStylesEnsureFunction", func(t *testing.T) {
+		// Test the defensive ensure function by checking if it creates missing selectors
+		flat := Flat{}
+		styles := flat.Styles()
+
+		// All the selectors that Flat theme applies should exist
+		expectedSelectors := []string{"body", ".email-wrapper", ".email-footer p", ".button"}
+		for _, selector := range expectedSelectors {
+			assert.Contains(t, styles, selector, "Selector should exist: %s", selector)
+			assert.NotNil(t, styles[selector], "Selector map should not be nil: %s", selector)
+		}
+
+		// Test that we can access nested properties without panics
+		assert.NotPanics(t, func() {
+			_ = styles["body"]["background-color"]
+			_ = styles[".button"]["border-radius"]
+		})
+	})
+}
+
+func TestNormalizeStyles(t *testing.T) {
+	t.Run("StylesDefinitionInput", func(t *testing.T) {
+		input := StylesDefinition{
+			"body": {"color": "red"},
+		}
+		result := normalizeStyles(input)
+		assert.Equal(t, input, result)
+	})
+
+	t.Run("MapStringMapStringInterfaceInput", func(t *testing.T) {
+		input := map[string]map[string]interface{}{
+			"body": {"color": "red", "background": "blue"},
+		}
+		result := normalizeStyles(input)
+		assert.NotNil(t, result)
+		assert.Contains(t, result, "body")
+		assert.Equal(t, "red", result["body"]["color"])
+		assert.Equal(t, "blue", result["body"]["background"])
+	})
+
+	t.Run("UnsupportedType", func(t *testing.T) {
+		result := normalizeStyles("invalid type")
+		assert.Nil(t, result)
+	})
+
+	t.Run("NilInput", func(t *testing.T) {
+		result := normalizeStyles(nil)
+		assert.Nil(t, result)
+	})
+}
+
+func TestSetDefaultHermesValues(t *testing.T) {
+	t.Run("EmptyHermes", func(t *testing.T) {
+		h := &Hermes{}
+		err := setDefaultHermesValues(h)
+		assert.NoError(t, err)
+		assert.NotNil(t, h.Theme)
+		assert.Equal(t, TDLeftToRight, h.TextDirection)
+		assert.Equal(t, "Hermes", h.Product.Name)
+	})
+
+	t.Run("PartialHermes", func(t *testing.T) {
+		h := &Hermes{
+			Product: Product{Name: "Custom App"},
+		}
+		err := setDefaultHermesValues(h)
+		assert.NoError(t, err)
+		assert.Equal(t, "Custom App", h.Product.Name) // Should keep existing value
+		assert.NotEmpty(t, h.Product.Copyright)       // Should get default
+	})
+
+	t.Run("InvalidTextDirection", func(t *testing.T) {
+		h := &Hermes{
+			TextDirection: TextDirection("invalid"),
+		}
+		err := setDefaultHermesValues(h)
+		assert.NoError(t, err)
+		assert.Equal(t, TDLeftToRight, h.TextDirection) // Should reset to default
+	})
+
+	t.Run("ValidTextDirection", func(t *testing.T) {
+		h := &Hermes{
+			TextDirection: TDRightToLeft,
+		}
+		err := setDefaultHermesValues(h)
+		assert.NoError(t, err)
+		assert.Equal(t, TDRightToLeft, h.TextDirection) // Should keep valid direction
+	})
+}
+
+func TestGenerateTemplate_EdgeCases(t *testing.T) {
+	t.Run("DeprecatedTableField", func(t *testing.T) {
+		h := &Hermes{Theme: new(Default)}
+		email := Email{
+			Body: Body{
+				Name: "Test User",
+				Table: Table{
+					Data: [][]Entry{
+						{
+							{Key: "Item", Value: "Test"},
+							{Key: "Price", Value: "$10"},
+						},
+					},
+				},
+			},
+		}
+
+		// Verify table data exists
+		assert.Len(t, email.Body.Table.Data, 1)
+
+		tmpl, err := getHTMLTemplate(h.Theme)
+		assert.NoError(t, err)
+
+		result, err := h.generateTemplate(email, tmpl)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, result)
+
+		// The key thing is that the function should handle deprecated tables without error
+		// We can't assert on the Tables field because the logic might depend on template execution
+		assert.Contains(t, result, "Test") // Verify the table data appears in output
+	})
+
+	t.Run("DisabledCSSInlining", func(t *testing.T) {
+		h := &Hermes{
+			Theme:              new(Default),
+			DisableCSSInlining: true,
+		}
+		email := Email{
+			Body: Body{Name: "Test User"},
+		}
+
+		tmpl, err := getHTMLTemplate(h.Theme)
+		assert.NoError(t, err)
+
+		result, err := h.generateTemplate(email, tmpl)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, result)
+		// Should contain embedded styles when inlining is disabled
+		assert.Contains(t, result, "<style")
+	})
+}
+
+func TestGenerateHTML_ErrorHandling(t *testing.T) {
+	email := Email{
+		Body: Body{
+			Name: "Test User",
+		},
+	}
+
+	t.Run("InvalidThemeTemplate", func(t *testing.T) {
+		h := Hermes{Theme: ErrorTheme{}}
+		_, err := h.GenerateHTML(email)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "template")
+	})
+
+	t.Run("ParsedThemeError", func(t *testing.T) {
+		h := Hermes{Theme: ErrorParsedTheme{}}
+		_, err := h.GenerateHTML(email)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "parsed HTML template error")
+	})
+
+	t.Run("CSSInliningDisabled", func(t *testing.T) {
+		h := Hermes{
+			Theme:              new(Default),
+			DisableCSSInlining: true,
+		}
+		result, err := h.GenerateHTML(email)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, result)
+		// When CSS inlining is disabled, we should get HTML with embedded styles
+		assert.Contains(t, result, "<style")
+	})
+}
+
+func TestGeneratePlainText_ErrorHandling(t *testing.T) {
+	email := Email{
+		Body: Body{
+			Name: "Test User",
+		},
+	}
+
+	t.Run("InvalidThemeTemplate", func(t *testing.T) {
+		h := Hermes{Theme: ErrorTheme{}}
+		_, err := h.GeneratePlainText(email)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "template")
+	})
+
+	t.Run("ParsedThemeError", func(t *testing.T) {
+		h := Hermes{Theme: ErrorParsedTheme{}}
+		_, err := h.GeneratePlainText(email)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "parsed plain text template error")
+	})
+
+	t.Run("HTML2TextConversion", func(t *testing.T) {
+		h := Hermes{Theme: new(Default)}
+		result, err := h.GeneratePlainText(email)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, result)
+		// Should successfully convert HTML to plain text
+		assert.NotContains(t, result, "<html>")
+		assert.NotContains(t, result, "</html>")
+	})
 }
 
 func TestHermes_Default(t *testing.T) {
