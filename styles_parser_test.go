@@ -64,7 +64,7 @@ body { color: black; }
 @font-face /* inline comment */ { font-family: Test; }
 `
 	styles := ParseStylesDefinition(css)
-	
+
 	// Should have clean selectors without standalone comments
 	if _, ok := styles["body"]; !ok {
 		t.Error("expected body selector to be present")
@@ -72,7 +72,7 @@ body { color: black; }
 	if _, ok := styles[".header"]; !ok {
 		t.Error("expected .header selector to be present")
 	}
-	
+
 	// Should preserve inline comment with @font-face
 	found := false
 	for key := range styles {
