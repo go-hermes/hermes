@@ -7,25 +7,15 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <style type="text/css" rel="stylesheet" media="all">
             {{/* Render CSS from map[string]map[string]interface{} */}}
-            {{ $css := .Email.Body.TemplateOverrides.css }}
-            {{ if $css }}
-                {{ range $selector, $props := $css }}
-                    {{ $selector }} {
-                        {{ range $key, $val := $props }}
-                            {{ $key }}: {{ css $val }};
-                        {{ end }}
-                    }
-                {{ end }}
-            {{ else }}
-                /* No CSS provided - using defaults from Go code */
-            {{ end }}
-
-            {{/* At-rules (e.g., @font-face, @keyframes) */}}
-            {{ if and (not (kindIs "invalid" .Email.Body.TemplateOverrides)) (hasKey .Email.Body.TemplateOverrides "at_rules") }}
-                {{ $ats := index .Email.Body.TemplateOverrides "at_rules" }}
-                {{ if $ats }}
-                    {{ range $rule := $ats }}
-                        {{ css $rule }}
+            {{ if and (not (kindIs "invalid" .Email.Body.TemplateOverrides)) (hasKey .Email.Body.TemplateOverrides "css") }}
+                {{ $css := index .Email.Body.TemplateOverrides "css" }}
+                {{ if $css }}
+                    {{ range $selector, $props := $css }}
+                        {{ $selector }} {
+                            {{ range $key, $val := $props }}
+                                {{ $key }}: {{ css $val }};
+                            {{ end }}
+                        }
                     {{ end }}
                 {{ end }}
             {{ end }}
