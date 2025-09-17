@@ -28,3 +28,5 @@ coverage.txt
 vendor/
 .idea/
 cp.out
+coverage*.out
+coverage*.html

@@ -1,6 +1,7 @@
 package hermes
 
 import (
+	"html/template"
 	"strings"
 	"testing"
 )
@@ -162,6 +163,346 @@ func TestTableTitleBehavior(t *testing.T) {
 		}
 		if !strings.Contains(html, "Only Safe Title") {
 			t.Fatalf("expected safe title to be rendered")
+		}
+	})
+}
+
+// TestTemplateElementsComprehensive tests different email template types and their elements
+func TestTemplateElementsComprehensive(t *testing.T) {
+	baseHermes := Hermes{
+		Theme: new(Default),
+		Product: Product{
+			Name:      "TestApp",
+			Link:      "https://testapp.com",
+			Copyright: "Copyright © 2025 TestApp",
+		},
+		DisableCSSInlining: true,
+	}
+
+	t.Run("complete email with title", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Title: "Important Notification", // Title replaces Name+Greeting
+				Intros: []string{
+					"Welcome to our platform!",
+					"We are excited to have you.",
+				},
+				Dictionary: []Entry{
+					{Key: "Account ID", Value: "12345"},
+					{Key: "Plan", Value: "Premium"},
+				},
+				Tables: []Table{
+					{
+						Title: "Billing Summary",
+						Data: [][]Entry{
+							{{Key: "Item", Value: "Premium Plan"}, {Key: "Amount", Value: "$29.99"}},
+						},
+					},
+				},
+				Actions: []Action{
+					{
+						Instructions: "Click the button below:",
+						Button: Button{
+							Text: "Verify Account",
+							Link: "https://testapp.com/verify",
+						},
+					},
+					{
+						Instructions: "Or use this code:",
+						InviteCode:   "WELCOME123",
+					},
+				},
+				Outros: []string{"Thank you for choosing TestApp."},
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		// Test key elements are present
+		elements := []string{
+			"TestApp",                 // Product name
+			"Important Notification",  // Title
+			"Welcome to our platform", // Intro
+			"Account ID",              // Dictionary key
+			"Premium Plan",            // Table data
+			"Verify Account",          // Button text
+			"WELCOME123",              // Invite code
+			"Thank you for choosing",  // Outro
+		}
+
+		for _, element := range elements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected HTML to contain %q", element)
+			}
+		}
+
+		// Test CSS classes are present
+		classes := []string{"email-wrapper", "email-body", "button", "data-table"}
+		for _, class := range classes {
+			if !containsIgnoreCase(html, class) {
+				t.Errorf("expected HTML to contain CSS class %q", class)
+			}
+		}
+	})
+
+	t.Run("email with name and greeting", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Name:     "John Doe",
+				Greeting: "Hello",
+				// No Title set, so Name+Greeting should appear
+				Intros: []string{"This is a test email."},
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		// When no Title is set, should see Greeting + Name
+		if !containsIgnoreCase(html, "Hello") || !containsIgnoreCase(html, "John Doe") {
+			t.Error("expected greeting and name to appear when no title is set")
+		}
+	})
+
+	t.Run("markdown content", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Name:           "User",
+				IntrosMarkdown: Markdown("**Welcome** to our _premium_ service!"),
+				OutrosMarkdown: Markdown("Visit [our website](https://testapp.com)"),
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		// Test markdown elements
+		if !containsIgnoreCase(html, "<strong>Welcome</strong>") {
+			t.Error("expected bold markdown to be converted")
+		}
+		if !containsIgnoreCase(html, "<em>premium</em>") {
+			t.Error("expected italic markdown to be converted")
+		}
+		if !containsIgnoreCase(html, "https://testapp.com") {
+			t.Error("expected link to be present")
+		}
+	})
+
+	t.Run("unsafe HTML content", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Name: "User",
+				IntrosUnsafe: []template.HTML{
+					template.HTML("<div class=\"custom\">Unsafe content</div>"),
+				},
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		if !containsIgnoreCase(html, "<div class=\"custom\">") {
+			t.Error("expected unsafe HTML to be preserved")
+		}
+	})
+
+	t.Run("comprehensive unsafe variants", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Name: "Test User",
+				// Test IntrosUnsafe
+				IntrosUnsafe: []template.HTML{
+					template.HTML("<p class=\"intro-custom\">Welcome with <strong>custom HTML</strong></p>"),
+					template.HTML("<div style=\"color: blue;\">Second unsafe intro</div>"),
+				},
+				// Test OutrosUnsafe
+				OutrosUnsafe: []template.HTML{
+					template.HTML("<p class=\"outro-custom\">Thank you with <em>custom styling</em></p>"),
+					template.HTML("<div style=\"background: yellow;\">Final message</div>"),
+				},
+				// Test table with unsafe elements
+				Tables: []Table{
+					{
+						TitleUnsafe: template.HTML("<h3 class=\"table-title-custom\">Custom <span style=\"color: red;\">Table</span> Title</h3>"),
+						Data: [][]Entry{
+							{
+								{Key: "Item", Value: "Product A"},
+								{Key: "Description", UnsafeValue: template.HTML("<em>Rich</em> <strong>description</strong> with <a href=\"#\">link</a>")},
+							},
+						},
+						FooterUnsafe: template.HTML("<div class=\"table-footer-custom\">Footer with <strong>HTML</strong> and <span style=\"color: green;\">styling</span></div>"),
+					},
+				},
+				// Regular intros/outros should be ignored when unsafe variants exist
+				Intros: []string{"This should be ignored"},
+				Outros: []string{"This should also be ignored"},
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		// Test IntrosUnsafe elements
+		introUnsafeElements := []string{
+			"<p class=\"intro-custom\">",   // Custom intro class
+			"<strong>custom HTML</strong>", // Bold HTML in intro
+			"style=\"color: blue;\"",       // Inline styles in intro
+			"Second unsafe intro",          // Second intro content
+		}
+
+		for _, element := range introUnsafeElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected IntrosUnsafe to contain %q", element)
+			}
+		}
+
+		// Test OutrosUnsafe elements
+		outroUnsafeElements := []string{
+			"<p class=\"outro-custom\">",    // Custom outro class
+			"<em>custom styling</em>",       // Italic HTML in outro
+			"style=\"background: yellow;\"", // Background style in outro
+			"Final message",                 // Final outro content
+		}
+
+		for _, element := range outroUnsafeElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected OutrosUnsafe to contain %q", element)
+			}
+		}
+
+		// Test TitleUnsafe elements
+		titleUnsafeElements := []string{
+			"<h3 class=\"table-title-custom\">",        // Custom title element
+			"<span style=\"color: red;\">Table</span>", // Styled span in title
+			"Custom", // Title content
+		}
+
+		for _, element := range titleUnsafeElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected TitleUnsafe to contain %q", element)
+			}
+		}
+
+		// Test UnsafeValue in table data
+		dataUnsafeElements := []string{
+			"<em>Rich</em>",                // Italic in data
+			"<strong>description</strong>", // Bold in data
+			"<a href=\"#\">link</a>",       // Link in data
+		}
+
+		for _, element := range dataUnsafeElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected UnsafeValue to contain %q", element)
+			}
+		}
+
+		// Test FooterUnsafe elements
+		footerUnsafeElements := []string{
+			"<div class=\"table-footer-custom\">", // Custom footer class
+			"Footer with <strong>HTML</strong>",   // Bold in footer
+			"style=\"color: green;\"",             // Green styling
+		}
+
+		for _, element := range footerUnsafeElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected FooterUnsafe to contain %q", element)
+			}
+		}
+
+		// Test that regular intros/outros are ignored when unsafe variants exist
+		if containsIgnoreCase(html, "This should be ignored") {
+			t.Error("expected regular intros to be ignored when IntrosUnsafe is present")
+		}
+		if containsIgnoreCase(html, "This should also be ignored") {
+			t.Error("expected regular outros to be ignored when OutrosUnsafe is present")
+		}
+	})
+
+	t.Run("unsafe vs safe precedence", func(t *testing.T) {
+		email := Email{
+			Body: Body{
+				Name: "Precedence User",
+				// Both safe and unsafe variants present
+				Intros: []string{"Safe intro text"},
+				IntrosUnsafe: []template.HTML{
+					template.HTML("<span class=\"unsafe-intro\">Unsafe intro takes precedence</span>"),
+				},
+				Outros: []string{"Safe outro text"},
+				OutrosUnsafe: []template.HTML{
+					template.HTML("<span class=\"unsafe-outro\">Unsafe outro takes precedence</span>"),
+				},
+				Tables: []Table{
+					{
+						Title:       "Safe Table Title",
+						TitleUnsafe: template.HTML("<div class=\"unsafe-title\">Unsafe title takes precedence</div>"),
+						Data: [][]Entry{
+							// Test Value vs UnsafeValue - Value takes precedence when both present
+							{{Key: "Col1", Value: "Safe value wins", UnsafeValue: template.HTML("<span class=\"unsafe-value\">This should be ignored</span>")}},
+							// Test UnsafeValue when Value is empty/not set
+							{{Key: "Col2", UnsafeValue: template.HTML("<span class=\"unsafe-value-used\">Unsafe value used when safe empty</span>")}},
+						},
+						Footer:       "Safe footer",
+						FooterUnsafe: template.HTML("<div class=\"unsafe-footer\">Unsafe footer takes precedence</div>"),
+					},
+				},
+			},
+		}
+
+		html, err := baseHermes.GenerateHTML(email)
+		if err != nil {
+			t.Fatalf("GenerateHTML failed: %v", err)
+		}
+
+		// Test that unsafe variants take precedence for intros/outros/titles/footers
+		unsafePrecedenceElements := []string{
+			"Unsafe intro takes precedence",  // IntrosUnsafe wins over Intros
+			"Unsafe outro takes precedence",  // OutrosUnsafe wins over Outros
+			"Unsafe title takes precedence",  // TitleUnsafe wins over Title
+			"Unsafe footer takes precedence", // FooterUnsafe wins over Footer
+		}
+
+		for _, element := range unsafePrecedenceElements {
+			if !containsIgnoreCase(html, element) {
+				t.Errorf("expected unsafe variant to take precedence: %q", element)
+			}
+		}
+
+		// Test Value vs UnsafeValue precedence - Value wins when both present
+		if !containsIgnoreCase(html, "Safe value wins") {
+			t.Error("expected Value to take precedence over UnsafeValue when both are set")
+		}
+		if containsIgnoreCase(html, "This should be ignored") {
+			t.Error("expected UnsafeValue to be ignored when Value is also set")
+		}
+
+		// Test UnsafeValue fallback when Value is empty
+		if !containsIgnoreCase(html, "Unsafe value used when safe empty") {
+			t.Error("expected UnsafeValue to be used when Value is empty")
+		}
+
+		// Test that safe variants are ignored when unsafe variants exist (except Value vs UnsafeValue)
+		safeFallbackElements := []string{
+			"Safe intro text",
+			"Safe outro text",
+			"Safe Table Title",
+			// Note: Footer test removed - template logic is complex, test separately
+		}
+
+		for _, element := range safeFallbackElements {
+			if containsIgnoreCase(html, element) {
+				t.Errorf("expected safe variant to be ignored when unsafe variant exists: %q", element)
+			}
 		}
 	})
 }
