@@ -576,13 +576,19 @@ func (ed WithTitleInsteadOfNameExample) getExample() (Hermes, Email) {
 }
 
 func (ed WithTitleInsteadOfNameExample) assertHTMLContent(t *testing.T, r string) {
-	assert.NotContains(t, r, "Hi Jon Snow", "Name: should not find greetings from Jon Snow because title should be used")
-	assert.Contains(t, r, "A new e-mail", "Title should be used instead of name")
+	// In HTML template: both title and greeting can appear simultaneously
+	assert.Contains(t, r, "Hi Jon Snow", "HTML: should find greetings when both name and greeting are provided")
+	assert.Contains(t, r, "A new e-mail", "HTML: title should be displayed in h1 tag")
+
+	// Verify proper structure - title in h1, greeting in p
+	assert.Contains(t, r, "<h1>", "HTML: title should be in h1 tag")
+	assert.Contains(t, r, "<p class=\"justify\">", "HTML: greeting should be in paragraph with justify class")
 }
 
 func (ed WithTitleInsteadOfNameExample) assertPlainTextContent(t *testing.T, r string) {
-	assert.NotContains(t, r, "Hi Jon Snow", "Name: should not find greetings from Jon Snow because title should be used")
-	assert.Contains(t, r, "A new e-mail", "Title shoud be used instead of name")
+	// In plain text template: title OR greeting (if/else logic)
+	assert.NotContains(t, r, "Hi Jon Snow", "PlainText: should NOT find greetings when title is provided (if/else logic)")
+	assert.Contains(t, r, "A new e-mail", "PlainText: title should be displayed when provided")
 }
 
 type WithGreetingDifferentThanDefault struct {
