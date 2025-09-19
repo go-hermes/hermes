@@ -63,13 +63,16 @@
                                     <!-- Body content -->
                                     <tr>
                                         <td class="content-cell">
+                                            {{ if (ne "" .Email.Body.Title) }}
                                             <h1>
-                                                {{if .Email.Body.Title }}
-                                                    {{ .Email.Body.Title }}
-                                                {{ else }}
-                                                    {{.Email.Body.Greeting }} {{ .Email.Body.Name }},
-                                                {{ end }}
+                                                {{ .Email.Body.Title }}
                                             </h1>
+                                            {{ end }}
+                                            {{ if (and (ne "" .Email.Body.Greeting) (ne "" .Email.Body.Name)) }}
+                                            <p class="justify">
+                                                {{ .Email.Body.Greeting }} {{ .Email.Body.Name }},
+                                            </p>
+                                            {{ end }}
                                             {{ if (ne .Email.Body.IntrosMarkdown "") }}
                                                 {{ .Email.Body.IntrosMarkdown.ToHTML }}
                                             {{ else if gt (len .Email.Body.IntrosUnsafe) 0 }}

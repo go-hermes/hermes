@@ -2,6 +2,7 @@ package hermes
 
 import (
 	"html/template"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -267,6 +268,146 @@ func TestTemplateElementsComprehensive(t *testing.T) {
 		if !containsIgnoreCase(html, "Hello") || !containsIgnoreCase(html, "John Doe") {
 			t.Error("expected greeting and name to appear when no title is set")
 		}
+	})
+
+	t.Run("title and greeting conditional logic", func(t *testing.T) {
+		// Test case 1: Title present - should show title only
+		t.Run("with title", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Title:    "Important Notification",
+					Name:     "John Doe",
+					Greeting: "Hello",
+					Intros:   []string{"This is a test email."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should contain title in h1 tag
+			if !containsIgnoreCase(html, "<h1>") || !containsIgnoreCase(html, "Important Notification") {
+				t.Error("expected title to appear in h1 tag when title is set")
+			}
+
+			// Should also contain greeting and name in separate paragraph
+			if !containsIgnoreCase(html, "Hello John Doe") {
+				t.Error("expected greeting and name to appear when both are provided")
+			}
+		})
+
+		// Test case 2: No title, but greeting and name - should show greeting + name
+		t.Run("without title but with greeting and name", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:     "Jane Smith",
+					Greeting: "Hi",
+					Intros:   []string{"This is a test email."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should NOT contain h1 tag since no title
+			if containsIgnoreCase(html, "<h1>") {
+				t.Error("should not contain h1 tag when no title is set")
+			}
+
+			// Should contain greeting and name
+			if !containsIgnoreCase(html, "Hi Jane Smith") {
+				t.Error("expected greeting and name to appear when no title is set")
+			}
+		})
+
+		// Test case 3: Empty greeting - should not show greeting paragraph
+		t.Run("with empty greeting", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:     "John Doe",
+					Greeting: "", // Empty greeting
+					Intros:   []string{"This is a test email."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should not contain greeting paragraph since greeting is empty (template uses AND condition)
+			greetingParagraphPattern := `<p class="justify">\s*John Doe`
+			matched, err := regexp.MatchString(greetingParagraphPattern, html)
+			if err != nil {
+				t.Fatalf("Regex error: %v", err)
+			}
+			if matched {
+				t.Error("should not show greeting paragraph when greeting is empty (template requires both greeting AND name)")
+			}
+		})
+
+		// Test case 4: Empty name - should not show greeting paragraph
+		t.Run("with empty name", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:     "", // Empty name
+					Greeting: "Hello",
+					Intros:   []string{"This is a test email."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should not contain greeting paragraph since name is empty (template uses AND condition)
+			greetingParagraphPattern := `<p class="justify">\s*Hello`
+			matched, err := regexp.MatchString(greetingParagraphPattern, html)
+			if err != nil {
+				t.Fatalf("Regex error: %v", err)
+			}
+			if matched {
+				t.Error("should not show greeting paragraph when name is empty (template requires both greeting AND name)")
+			}
+		})
+
+		// Test case 5: Both title and greeting/name present
+		t.Run("with both title and greeting", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Title:    "Account Update",
+					Name:     "Alice Johnson",
+					Greeting: "Dear",
+					Intros:   []string{"Your account has been updated."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should contain both title and greeting
+			if !containsIgnoreCase(html, "<h1>") || !containsIgnoreCase(html, "Account Update") {
+				t.Error("expected title to appear in h1 tag")
+			}
+
+			if !containsIgnoreCase(html, "Dear Alice Johnson") {
+				t.Error("expected greeting and name to appear alongside title")
+			}
+
+			// Verify proper HTML structure - title before greeting
+			titleIndex := strings.Index(strings.ToLower(html), "<h1>")
+			greetingIndex := strings.Index(strings.ToLower(html), "dear alice johnson")
+			if titleIndex == -1 || greetingIndex == -1 || titleIndex >= greetingIndex {
+				t.Error("expected title to appear before greeting in HTML structure")
+			}
+		})
 	})
 
 	t.Run("markdown content", func(t *testing.T) {
