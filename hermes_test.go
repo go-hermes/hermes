@@ -641,8 +641,9 @@ func (ed WithSignatureDifferentThanDefault) getExample() (Hermes, Email) {
 
 	email := Email{
 		Body{
-			Name:      "Jon Snow",
-			Signature: "Best regards",
+			Name:          "Jon Snow",
+			Signature:     "Best regards",
+			SignatureName: "Test User",
 		},
 	}
 
@@ -767,7 +768,7 @@ Feel free to contact us for any question regarding this matter at [support@herme
 }
 
 func (ed WithFreeMarkdownContent) assertHTMLContent(t *testing.T, r string) {
-	assert.Contains(t, r, "Yours truly", "Should find signature with 'Yours truly' which is default")
+	assert.NotContains(t, r, "Yours truly", "Should not find default signature when none is explicitly set")
 	assert.Contains(t, r, "Jon Snow", "Should find title with 'Jon Snow'")
 	assert.Contains(t, r, "<em>Hermes</em> service will shutdown", "Should find quote as HTML formatted content")
 	assert.Contains(t, r, "<td align=\"center\">2AM to 3AM</td>", "Should find cell content as HTML formatted content")
@@ -778,7 +779,7 @@ func (ed WithFreeMarkdownContent) assertHTMLContent(t *testing.T, r string) {
 }
 
 func (ed WithFreeMarkdownContent) assertPlainTextContent(t *testing.T, r string) {
-	assert.Contains(t, r, "Yours truly", "Should find signature with 'Yours truly' which is default")
+	assert.NotContains(t, r, "Yours truly", "Should not find default signature when none is explicitly set")
 	assert.Contains(t, r, "Jon Snow", "Should find title with 'Jon Snow'")
 	assert.Contains(t, r, "> Hermes service will shutdown", "Should find quote as plain text with quote emphaze on sentence")
 	assert.Contains(t, r, "2AM to 3AM", "Should find cell content as plain text")
@@ -1358,6 +1359,6 @@ func TestHermes_Default(t *testing.T) {
 	assert.Empty(t, string(email.Body.FreeMarkdown))
 
 	assert.Equal(t, "Hi", email.Body.Greeting)
-	assert.Equal(t, "Yours truly", email.Body.Signature)
+	assert.Empty(t, email.Body.Signature) // No default signature anymore
 	assert.Empty(t, email.Body.Title)
 }

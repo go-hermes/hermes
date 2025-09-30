@@ -99,6 +99,18 @@ func TestThemeAndCSSScenarios(t *testing.T) {
 				contains: []string{"width: 700px", "max-width: 700px", "color: red"},
 			}},
 		},
+		{
+			name:   "new CSS field approach",
+			hermes: Hermes{Product: Product{Name: "Test", Link: "https://example.com"}, DisableCSSInlining: true},
+			email: Email{Body: Body{Intros: []string{"Hi"}, CSS: StylesDefinition{
+				"body":       {"background-color": "#123456"},
+				".new-class": {"font-weight": "bold"},
+			}}},
+			assertions: []assertion{{
+				name:     "new CSS field works",
+				contains: []string{"background-color: #123456", ".new-class", "font-weight: bold"},
+			}},
+		},
 	}
 
 	for _, sc := range scenarios {
@@ -406,6 +418,91 @@ func TestTemplateElementsComprehensive(t *testing.T) {
 			greetingIndex := strings.Index(strings.ToLower(html), "dear alice johnson")
 			if titleIndex == -1 || greetingIndex == -1 || titleIndex >= greetingIndex {
 				t.Error("expected title to appear before greeting in HTML structure")
+			}
+		})
+	})
+
+	t.Run("signature behavior", func(t *testing.T) {
+		t.Run("no signature without SignatureName", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:   "Test User",
+					Intros: []string{"Test content."},
+					// No SignatureName provided
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should NOT contain signature when SignatureName is not provided
+			if containsIgnoreCase(html, "Yours truly") {
+				t.Error("should not contain signature when SignatureName is not provided")
+			}
+		})
+
+		t.Run("explicit signature appears with SignatureName", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:          "Test User",
+					Signature:     "Best regards",
+					SignatureName: "John Smith", // Required for signature to show
+					Intros:        []string{"Test content."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should contain the explicitly set signature
+			if !containsIgnoreCase(html, "Best regards") {
+				t.Error("should contain explicitly set signature when SignatureName is provided")
+			}
+		})
+
+		t.Run("default signature appears with SignatureName", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:          "Test User",
+					Signature:     "Yours truly", // Explicitly set signature
+					SignatureName: "John Smith",
+					Intros:        []string{"Test content."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should contain signature when both Signature and SignatureName are provided
+			if !containsIgnoreCase(html, "Yours truly") {
+				t.Error("should contain signature when both Signature and SignatureName are provided")
+			}
+		})
+
+		t.Run("empty signature is respected", func(t *testing.T) {
+			email := Email{
+				Body: Body{
+					Name:          "Test User",
+					Signature:     "", // Explicitly empty
+					SignatureName: "John Smith",
+					Intros:        []string{"Test content."},
+				},
+			}
+
+			html, err := baseHermes.GenerateHTML(email)
+			if err != nil {
+				t.Fatalf("GenerateHTML failed: %v", err)
+			}
+
+			// Should not contain any signature when explicitly set to empty
+			if containsIgnoreCase(html, "Best regards") || containsIgnoreCase(html, "Yours truly") {
+				t.Error("should not contain any signature when explicitly set to empty")
 			}
 		})
 	})

@@ -267,12 +267,10 @@
                                                 {{ end }}
                                             {{ end }}
 
-                                            {{ with .Email.Body.Signature }} 
-                                                {{ if (gt (len .) 0) }}
+                                            {{ if and .Email.Body.Signature (gt (len .Email.Body.Signature) 0) }} 
                                                     <b>
-                                                        <p style="margin-top: 15px;">{{ . }}</p>
+                                                        <p style="margin-top: 15px;">{{ .Email.Body.Signature }}{{ if .Email.Body.SignatureName }}<br>{{ .Email.Body.SignatureName }}{{ end }}</p>
                                                     </b>
-                                                {{ end }}
                                             {{ end }}
 
                                             {{ if (eq .Email.Body.FreeMarkdown "") }}

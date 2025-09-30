@@ -106,6 +106,9 @@
         {{ end }}
     {{ end }}
 {{ end }}
-<p>{{.Email.Body.Signature}},<br>{{.Hermes.Product.Name}} - {{.Hermes.Product.Link}}</p>
+{{ if and .Email.Body.Signature (gt (len .Email.Body.Signature) 0) }}
+<p>{{.Email.Body.Signature}}{{ if .Email.Body.SignatureName }}<br>{{.Email.Body.SignatureName}}{{ end }}</p>
+{{ end }}
+<p>{{.Hermes.Product.Name}} - {{.Hermes.Product.Link}}</p>
 
 <p>{{.Hermes.Product.Copyright}}</p>
