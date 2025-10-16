@@ -18,7 +18,6 @@ Your order has been processed successfully.
 
 You can check the status of your order and more in your dashboard: https://hermes-example.com/dashboard
 
-Yours truly,
 Hermes - https://example-hermes.com/
 
 Copyright © 2025 Hermes. All rights reserved.
