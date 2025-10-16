@@ -170,7 +170,7 @@ func send(smtpConfig smtpAuthentication, options sendOptions, htmlBody string, t
 
 	// Create new message
 	m := mail.NewMsg()
-	
+
 	// Set sender with name and email
 	if err := m.FromFormat(smtpConfig.SenderIdentity, smtpConfig.SenderEmail); err != nil {
 		return err
