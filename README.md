@@ -49,7 +49,7 @@ h := hermes.Hermes{
         Name: "Hermes",
         Link: "https://example-hermes.com/",
         // Optional product logo
-        Logo: "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+        Logo: "https://go.dev/blog/gopher/header.jpg",
     },
 }
 ```

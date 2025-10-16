@@ -161,12 +161,7 @@ func (c Markdown) ToHTML() template.HTML {
 	var buf bytes.Buffer
 	md := goldmark.New(
 		goldmark.WithExtensions(
-			extension.Linkify,
-			extension.Strikethrough,
-			extension.TaskList,
-			extension.NewTable(
-				extension.WithTableCellAlignMethod(extension.TableCellAlignAttribute),
-			),
+			extension.GFM,
 		),
 	)
 	if err := md.Convert([]byte(c), &buf); err != nil {
