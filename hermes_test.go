@@ -817,10 +817,6 @@ func TestThemeSimplePremailer(t *testing.T) {
 func TestThemeSimpleMarkdownIntroOutro(t *testing.T) {
 	for i, theme := range testedThemes {
 		t.Run(fmt.Sprintf("%s-%d", theme.Name(), i), func(t *testing.T) {
-			debug = true
-			t.Cleanup(func() {
-				debug = false
-			})
 			checkExample(t, &SimpleExampleMarkdownIntroOutro{theme})
 		})
 	}
