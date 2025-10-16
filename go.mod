@@ -5,13 +5,13 @@ go 1.24.0
 require (
 	dario.cat/mergo v1.0.2
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/jaytaylor/html2text v0.0.0-20230321000545-74c2419ad056
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/vanng822/go-premailer v1.25.0
+	github.com/wneessen/go-mail v0.7.2
+	github.com/yuin/goldmark v1.7.13
 	golang.org/x/term v0.33.0
 )
 
@@ -36,7 +36,6 @@ require (
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
+	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

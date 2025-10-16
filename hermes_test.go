@@ -56,7 +56,7 @@ func (ed SimpleExample) getExample() (Hermes, Email) {
 			Name:      "HermesName",
 			Link:      "http://hermes-link.com",
 			Copyright: "Copyright © Hermes-Test",
-			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo:      "https://go.dev/blog/gopher/header.jpg",
 		},
 		TextDirection:      TDLeftToRight,
 		DisableCSSInlining: true,
@@ -129,7 +129,7 @@ func (ed SimpleExample) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should find the logo of the product in email")
 	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -152,7 +152,7 @@ func (ed SimpleExample) assertPlainTextContent(t *testing.T, r string) {
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+	assert.NotContains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should not find any logo in plain text")
 
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -188,7 +188,7 @@ func (ed SimpleExamplePremailer) getExample() (Hermes, Email) {
 			Name:      "HermesName",
 			Link:      "http://hermes-link.com",
 			Copyright: "Copyright © Hermes-Test",
-			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo:      "https://go.dev/blog/gopher/header.jpg",
 		},
 		TextDirection: TDLeftToRight,
 	}
@@ -254,7 +254,7 @@ func (ed SimpleExamplePremailer) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should find the logo of the product in email")
 	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -277,7 +277,7 @@ func (ed SimpleExamplePremailer) assertPlainTextContent(t *testing.T, r string) 
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+	assert.NotContains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should not find any logo in plain text")
 
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -313,7 +313,7 @@ func (ed SimpleExampleUnsafe) getExample() (Hermes, Email) {
 			Name:      "HermesName",
 			Link:      "http://hermes-link.com",
 			Copyright: "Copyright © Hermes-Test",
-			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo:      "https://go.dev/blog/gopher/header.jpg",
 		},
 		TextDirection: TDLeftToRight,
 	}
@@ -379,7 +379,7 @@ func (ed SimpleExampleUnsafe) assertHTMLContent(t *testing.T, r string) {
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should find the logo of the product in email")
 	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -402,7 +402,7 @@ func (ed SimpleExampleUnsafe) assertPlainTextContent(t *testing.T, r string) {
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+	assert.NotContains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should not find any logo in plain text")
 
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -438,7 +438,7 @@ func (ed SimpleExampleMarkdownIntroOutro) getExample() (Hermes, Email) {
 			Name:      "HermesName",
 			Link:      "http://hermes-link.com",
 			Copyright: "Copyright © Hermes-Test",
-			Logo:      "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo:      "https://go.dev/blog/gopher/header.jpg",
 		},
 		TextDirection:      TDLeftToRight,
 		DisableCSSInlining: true,
@@ -447,9 +447,10 @@ func (ed SimpleExampleMarkdownIntroOutro) getExample() (Hermes, Email) {
 	email := Email{
 		Body{
 			Name: "Jon Snow",
-			IntrosMarkdown: `## Welcome to Hermes! 
-				### We're very excited to have you on board.
-				`,
+			IntrosMarkdown: Markdown(strings.Join([]string{
+				`## Welcome to Hermes!`,
+				`### We're very excited to have you on board.`,
+			}, "\n")),
 			Dictionary: []Entry{
 				{"Firstname", "Jon", ""},
 				{"Lastname", "Snow", ""},
@@ -503,7 +504,7 @@ func (ed SimpleExampleMarkdownIntroOutro) assertHTMLContent(t *testing.T, r stri
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.Contains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should find the logo of the product in email")
+	assert.Contains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should find the logo of the product in email")
 	assert.Contains(t, r, "If you’re having trouble with the button &#39;Confirm your account&#39;, copy and paste the URL below into your web browser.", "Product: Should find the trouble text in email")
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")
@@ -526,7 +527,7 @@ func (ed SimpleExampleMarkdownIntroOutro) assertPlainTextContent(t *testing.T, r
 	assert.Contains(t, r, "HermesName", "Product: Should find the name of the product in email")
 	assert.Contains(t, r, "http://hermes-link.com", "Product: Should find the link of the product in email")
 	assert.Contains(t, r, "Copyright © Hermes-Test", "Product: Should find the Copyright of the product in email")
-	assert.NotContains(t, r, "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png", "Product: Should not find any logo in plain text")
+	assert.NotContains(t, r, "https://go.dev/blog/gopher/header.jpg", "Product: Should not find any logo in plain text")
 
 	// Assert on email body
 	assert.Contains(t, r, "Hi Jon Snow", "Name: Should find the name of the person")

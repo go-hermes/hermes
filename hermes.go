@@ -7,9 +7,10 @@ import (
 	"dario.cat/mergo"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/jaytaylor/html2text"
-	"github.com/russross/blackfriday/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/vanng822/go-premailer/premailer"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 // Hermes is an instance of the hermes email generator
@@ -157,7 +158,21 @@ type Body struct {
 
 // ToHTML converts Markdown to HTML
 func (c Markdown) ToHTML() template.HTML {
-	return template.HTML(blackfriday.Run([]byte(c)))
+	var buf bytes.Buffer
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.NewTable(
+				extension.WithTableCellAlignMethod(
+					extension.TableCellAlignAttribute,
+				),
+			),
+			extension.GFM,
+		),
+	)
+	if err := md.Convert([]byte(c), &buf); err != nil {
+		return template.HTML("")
+	}
+	return template.HTML(buf.Bytes())
 }
 
 // Entry is a simple entry of a map

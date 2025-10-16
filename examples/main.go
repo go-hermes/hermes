@@ -3,12 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"net/mail"
 	"os"
 	"strconv"
 
-	"github.com/go-gomail/gomail"
 	"github.com/go-hermes/hermes/v2"
+	"github.com/wneessen/go-mail"
 	"golang.org/x/term"
 )
 
@@ -169,20 +168,37 @@ func send(smtpConfig smtpAuthentication, options sendOptions, htmlBody string, t
 		return errEmptyReceiverEmails
 	}
 
-	from := mail.Address{
-		Name:    smtpConfig.SenderIdentity,
-		Address: smtpConfig.SenderEmail,
+	// Create new message
+	m := mail.NewMsg()
+
+	// Set sender with name and email
+	if err := m.FromFormat(smtpConfig.SenderIdentity, smtpConfig.SenderEmail); err != nil {
+		return err
 	}
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", from.String())
-	m.SetHeader("To", options.To)
-	m.SetHeader("Subject", options.Subject)
+	// Set recipients
+	if err := m.To(options.To); err != nil {
+		return err
+	}
 
-	m.SetBody("text/plain", txtBody)
-	m.AddAlternative("text/html", htmlBody)
+	// Set subject
+	m.Subject(options.Subject)
 
-	d := gomail.NewDialer(smtpConfig.Server, smtpConfig.Port, smtpConfig.SMTPUser, smtpConfig.SMTPPassword)
+	// Set body - text/plain as primary, text/html as alternative
+	m.SetBodyString(mail.TypeTextPlain, txtBody)
+	m.AddAlternativeString(mail.TypeTextHTML, htmlBody)
 
-	return d.DialAndSend(m)
+	// Create SMTP client
+	client, err := mail.NewClient(smtpConfig.Server,
+		mail.WithPort(smtpConfig.Port),
+		mail.WithUsername(smtpConfig.SMTPUser),
+		mail.WithPassword(smtpConfig.SMTPPassword),
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Send the message
+	return client.DialAndSend(m)
 }
