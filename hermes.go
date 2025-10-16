@@ -161,6 +161,11 @@ func (c Markdown) ToHTML() template.HTML {
 	var buf bytes.Buffer
 	md := goldmark.New(
 		goldmark.WithExtensions(
+			extension.NewTable(
+				extension.WithTableCellAlignMethod(
+					extension.TableCellAlignAttribute,
+				),
+			),
 			extension.GFM,
 		),
 	)
