@@ -523,7 +523,7 @@ Be aware that this content will replace existing tables, dictionary and actions.
 
 This is helpful when your application needs sending e-mails, wrote on-the-fly by adminstrators.
 
-> Markdown is rendered with [Blackfriday](https://github.com/russross/blackfriday), so every thing Blackfriday can do, Hermes can do it as well.
+> Markdown is rendered with [goldmark](https://github.com/yuin/goldmark), supporting GitHub-flavored markdown including tables, strikethrough, task lists, and auto-linking.
 
 ### Template Overrides
 
