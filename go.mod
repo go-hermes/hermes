@@ -8,10 +8,10 @@ require (
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/jaytaylor/html2text v0.0.0-20230321000545-74c2419ad056
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/vanng822/go-premailer v1.25.0
+	github.com/yuin/goldmark v1.7.13
 	golang.org/x/term v0.33.0
 )
 
