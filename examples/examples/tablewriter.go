@@ -1,12 +1,12 @@
 package examples
 
 import (
-	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
 // this is temporary until https://github.com/jaytaylor/html2text/pull/68 is merged
-var alignment = tablewriter.ALIGN_LEFT
+var alignment = tw.AlignLeft
 
-func NoOp() int {
-	return alignment
+func NoOp() string {
+	return string(alignment)
 }
