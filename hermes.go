@@ -6,7 +6,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/Masterminds/sprig/v3"
-	"github.com/jaytaylor/html2text"
+	"github.com/inbucket/html2text"
 	"github.com/sirupsen/logrus"
 	"github.com/vanng822/go-premailer/premailer"
 	"github.com/yuin/goldmark"
