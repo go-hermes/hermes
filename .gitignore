@@ -30,3 +30,6 @@ vendor/
 cp.out
 coverage*.out
 coverage*.html
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md
